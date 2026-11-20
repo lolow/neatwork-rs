@@ -1,0 +1,5 @@
+bin.name = "neatwork"
+args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "random", "--opentaps", "1", "--nbsim", "5"]
+status.code = 0
+fs.sandbox = true
+fs.base = "simulate-toy-random-all-open.in"

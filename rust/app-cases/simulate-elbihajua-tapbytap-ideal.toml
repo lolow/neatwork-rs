@@ -1,0 +1,5 @@
+bin.name = "neatwork"
+args = ["simulate", "El_Bihajua.dsg", "-o", "out.sim", "--type", "tapbytap", "--orifice", "ideal"]
+status.code = 0
+fs.sandbox = true
+fs.base = "simulate-elbihajua-tapbytap-ideal.in"

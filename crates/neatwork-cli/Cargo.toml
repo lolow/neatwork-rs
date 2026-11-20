@@ -1,0 +1,17 @@
+[package]
+name = "neatwork-cli"
+description = "Command line interface for the NeatWork engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "neatwork"
+path = "src/main.rs"
+
+[dependencies]
+neatwork-core = { path = "../neatwork-core" }
+clap = { version = "4.6.9", features = ["derive"] }
+
+[lints]
+workspace = true

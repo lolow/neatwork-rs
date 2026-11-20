@@ -1,0 +1,5 @@
+bin.name = "neatwork"
+args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "handmade"]
+status.code = 0
+fs.sandbox = true
+fs.base = "simulate-toy-handmade-none.in"

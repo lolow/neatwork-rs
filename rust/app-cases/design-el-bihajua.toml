@@ -1,0 +1,5 @@
+bin.name = "neatwork"
+args = ["design", "El_Bihajua.tpo", "-o", "El_Bihajua.dsg"]
+status.code = 0
+fs.sandbox = true
+fs.base = "design-el-bihajua.in"

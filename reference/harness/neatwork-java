@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# NeatWork 2024 Java engine (reference) with the command line of the Rust
+# port, so the same cases run against both:
+#
+#   neatwork-java design   <in.tpo> -o <out.dsg>
+#   neatwork-java simulate <in.dsg> -o <out.sim> [--type T] [--nbsim N]
+#                          [--opentaps R] [--orifice O] [--open A,B]
+#
+# The Java code called MOSEK for the design LP. Here the harness writes the
+# LP it builds, HiGHS solves it (`neatwork lp-solve`, set NEATWORK_LP_SOLVER
+# to another binary if needed), and a second Java run uses that solution.
+# Java's own console lines are discarded; errors keep the exit code.
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+jar="$here/build/neatwork-harness.jar"
+[ -f "$jar" ] || "$here/build.sh" >/dev/null
+solver="${NEATWORK_LP_SOLVER:-$here/../../target/release/neatwork}"
+
+cmd="${1:?usage: neatwork-java design|simulate <input> -o <output> [options]}"
+shift
+input="${1:?missing input file}"
+shift
+out=""
+rest=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|--output) out="$2"; shift 2 ;;
+    --seed) shift 2 ;;            # Java uses Math.random(); no seed
+    *) rest+=("$1"); shift ;;
+  esac
+done
+[ -n "$out" ] || { echo "neatwork-java: -o <output> is required" >&2; exit 2; }
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+case "$cmd" in
+  design)
+    java -Dnw.lp.dump="$tmp/lp.json" -jar "$jar" design "$input" "$tmp/first.dsg" >"$tmp/log" 2>&1 \
+      || { cat "$tmp/log" >&2; exit 1; }
+    "$solver" lp-solve "$tmp/lp.json" >"$tmp/x.txt"
+    java -Dnw.lp.solution="$tmp/x.txt" -jar "$jar" design "$input" "$out" >"$tmp/log" 2>&1 \
+      || { cat "$tmp/log" >&2; exit 1; }
+    ;;
+  simulate)
+    java -jar "$jar" simulate "$input" "$out" "${rest[@]}" >"$tmp/log" 2>&1 \
+      || { cat "$tmp/log" >&2; exit 1; }
+    ;;
+  *) echo "neatwork-java: unknown command $cmd" >&2; exit 2 ;;
+esac
