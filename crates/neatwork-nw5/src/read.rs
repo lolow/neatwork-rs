@@ -139,12 +139,13 @@ pub fn read_diameters_db(text: &str) -> Result<Vec<Pipe>> {
 
 /// Catalogue rows of a `.tpo` (7 or 8 fields) or `.dsg` (8 or 9 fields
 /// with an ID first).
-fn diameters_from_rows(rows: &[Vec<String>], dsg: bool) -> Result<Vec<Pipe>> {
+fn diameters_from_rows(rows: &[Vec<String>], _dsg: bool) -> Result<Vec<Pipe>> {
     let mut with_id = Vec::new();
     let mut without_id = Vec::new();
     for r in rows {
         let line = r.join(",");
-        let has_id = if dsg { r.len() >= 8 } else { r.len() >= 8 };
+        // 8 or more fields: the ID comes first (in .tpo and .dsg alike)
+        let has_id = r.len() >= 8;
         if r.len() < 7 {
             continue;
         }
@@ -460,18 +461,18 @@ pub fn g15(x: f64) -> String {
     if x == 0.0 {
         return "0".into();
     }
-    let exp = x.abs().log10().floor() as i32;
-    let s = if !(-4..15).contains(&exp) {
-        let m = format!("{x:.14e}");
-        let (mant, e) = m.split_once('e').unwrap_or((&m, "0"));
-        let mant = trim_zeros(mant);
-        let e: i32 = e.parse().unwrap_or(0);
-        format!("{mant}e{}{:02}", if e < 0 { '-' } else { '+' }, e.abs())
-    } else {
+    // round to 15 significant digits first: the exponent of the rounded
+    // value decides the notation, as in C printf %g
+    let m = format!("{x:.14e}");
+    let (mant, e) = m.split_once('e').unwrap_or((&m, "0"));
+    let exp: i32 = e.parse().unwrap_or(0);
+    if (-4..15).contains(&exp) {
         let decimals = (14 - exp).max(0) as usize;
         trim_zeros(&format!("{x:.decimals$}"))
-    };
-    s
+    } else {
+        let mant = trim_zeros(mant);
+        format!("{mant}e{}{:02}", if exp < 0 { '-' } else { '+' }, exp.abs())
+    }
 }
 
 fn trim_zeros(s: &str) -> String {
@@ -503,6 +504,8 @@ mod tests {
         assert_eq!(g15(5.5737646484375), "5.5737646484375");
         assert_eq!(g15(f64::INFINITY), "Inf");
         assert_eq!(g15(1e15), "1e+15");
+        assert_eq!(g15(999_999_999_999_999.9), "1e+15");
+        assert_eq!(g15(0.000_099_999_999_999_999_99), "0.0001");
     }
 
     #[test]
