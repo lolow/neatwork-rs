@@ -3,6 +3,8 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+mod nw5;
+
 use clap::{Parser, Subcommand, ValueEnum};
 use neatwork_core::engine::lp::{parse_solution, solution_text};
 use neatwork_core::{
@@ -83,6 +85,31 @@ enum Command {
     LpSolve {
         /// LP file (JSON).
         input: PathBuf,
+    },
+    /// Convert a NeatWork 5 network between formats: .tpo, .dsg, .json
+    /// (MATLAB NW-json-v1 or application domain JSON), EPANET .inp, or a
+    /// Cruscade Txt folder as input.
+    Convert {
+        /// Input file or Txt folder.
+        input: PathBuf,
+        /// Output file; its extension gives the format.
+        #[arg(short, long)]
+        output: PathBuf,
+        /// Upgrade a NeatWork 4 .dsg (no !Clients section) to NeatWork 5.
+        #[arg(long)]
+        upgrade: bool,
+        /// Kind of JSON written.
+        #[arg(long, value_parser = ["matlab", "domain"], default_value = "matlab")]
+        json: String,
+        /// Txt folder: prefix of the five files (for example CruscadeDet2406).
+        #[arg(long)]
+        txt_prefix: Option<String>,
+        /// Txt folder: client target flows are in m3/s (Cruscade files).
+        #[arg(long)]
+        txt_m3s: bool,
+        /// EPANET import: one always-open client per demand.
+        #[arg(long)]
+        inp_open_demands: bool,
     },
     /// Simulate a design (.dsg) and write a simulation (.sim).
     Simulate {
@@ -217,6 +244,25 @@ fn run(cli: Cli) -> Result<(), String> {
             }
             Ok(())
         }
+        Command::Convert {
+            input,
+            output,
+            upgrade,
+            json,
+            txt_prefix,
+            txt_m3s,
+            inp_open_demands,
+        } => nw5::convert(
+            &input,
+            &output,
+            &nw5::ConvertOptions {
+                upgrade,
+                txt_prefix,
+                txt_cubic_metres: txt_m3s,
+                inp_open_demands,
+                json_kind: json,
+            },
+        ),
         Command::LpSolve { input } => {
             let lp = Lp::from_json(&read(&input)?).map_err(|e| e.to_string())?;
             let x = solve_with_highs(&lp).map_err(|e| e.to_string())?;

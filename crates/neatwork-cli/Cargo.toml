@@ -11,6 +11,8 @@ path = "src/main.rs"
 
 [dependencies]
 neatwork-core = { path = "../neatwork-core" }
+neatwork-nw5 = { path = "../neatwork-nw5" }
+neatwork-nw5-io = { path = "../neatwork-nw5-io" }
 clap = { version = "4.6.9", features = ["derive"] }
 
 [lints]
