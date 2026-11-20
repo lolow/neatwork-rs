@@ -53,6 +53,30 @@ impl LpModel {
         (nx..self.n_var()).any(|j| self.lb[j] != self.ub[j])
     }
 
+    /// Likely causes of an infeasible model, by arc index (not in MATLAB):
+    /// an arc that needs a pipe but has no allowed catalogue pipe (pressure
+    /// class or minimum diameter), or a head-loss row whose right-hand side
+    /// cannot be met by any positive loss.
+    pub fn infeasibility_hints(&self) -> Vec<(usize, InfeasibilityHint)> {
+        let nx = self.nb_a * self.nb_d;
+        let mut hints = Vec::new();
+        for a in 0..self.nb_a {
+            let needs_pipe = self.lb.get(nx + a).is_some_and(|&l| l == 1.0);
+            let any_pipe = (0..self.nb_d).any(|d| self.ub[a * self.nb_d + d] > 0.0);
+            if needs_pipe && !any_pipe {
+                hints.push((a, InfeasibilityHint::NoAllowedPipe));
+            }
+        }
+        for (a, (row, &b)) in self.a_ineq.iter().zip(&self.b_ineq).enumerate() {
+            let credit: f64 = row.iter().filter(|(_, v)| *v < 0.0).map(|(_, v)| -v).sum();
+            let loss = row.iter().any(|&(j, v)| v > 0.0 && self.ub[j] > 0.0);
+            if loss && b + credit <= 0.0 {
+                hints.push((a, InfeasibilityHint::NoHead(b + credit)));
+            }
+        }
+        hints
+    }
+
     /// `activ_variables = (ub == 1)`.
     pub fn activ_variables(&self) -> Vec<bool> {
         self.ub.iter().map(|&u| u == 1.0).collect()
@@ -237,6 +261,17 @@ pub fn build_model(
         a_eq,
         b_eq: vec![0.0; nb_a],
     })
+}
+
+/// A likely cause of an infeasible model, see
+/// [`LpModel::infeasibility_hints`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum InfeasibilityHint {
+    /// No catalogue pipe holds the static pressure `pmax` with at least the
+    /// minimum diameter.
+    NoAllowedPipe,
+    /// Head available for the losses on the path, m (zero or negative).
+    NoHead(f64),
 }
 
 /// Solution of the model after the clean-up of `solveModel.m`.

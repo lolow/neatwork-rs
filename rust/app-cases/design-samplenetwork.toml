@@ -1,5 +1,5 @@
 bin.name = "neatwork"
-args = ["design", "SampleNetwork.tpo", "-o", "SampleNetwork.dsg"]
+args = ["design", "SampleNetwork.tpo", "-o", "SampleNetwork.dsg", "--engine", "nw4"]
 status.code = 0
 fs.sandbox = true
 fs.base = "design-samplenetwork.in"

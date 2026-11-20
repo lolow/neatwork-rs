@@ -10,10 +10,10 @@ Decisions: ADR-018 to ADR-020 in [../DECISIONS.md](../DECISIONS.md).
 | --- | --- | --- |
 | 1. Specifications | `specs/simulation.md`, `specs/design.md`, `specs/formats.md`, `specs/app.md` | done (2026-11-20) |
 | 2. References | Outputs of the python-core simulation on the examples (`reference/harness-nw5`). Expected values of the MATLAB design tests (`specs/design.md` section 8). | done (2026-11-20) |
-| 3. Data model and formats | Model and readers in `neatwork-nw5` (done, 32 example files read). Writers, JSON, EPANET, Cruscade in `neatwork-nw5-io` | in progress |
-| 4. Simulation | `neatwork-nw5-sim`: IPM engine, meshed and multi-source networks, bounded flow, statistics | in progress |
-| 5. Design | `neatwork-nw5-design`: load factors (VaR, CVaR), LP model, post-processing | in progress |
-| 6. Command line | `--engine nw5` by default, `--engine nw4` | open |
+| 3. Data model and formats | Model and readers in `neatwork-nw5` (32 example files read). Writers, JSON, EPANET, text folders in `neatwork-nw5-io` | done (2026-11-20) |
+| 4. Simulation | `neatwork-nw5-sim`: IPM engine, meshed and multi-source networks, bounded flow, statistics. 11 python-core runs within tolerance, independent checks | done (2026-11-20) |
+| 5. Design | `neatwork-nw5-design`: load factors (VaR, CVaR), LP model, post-processing. Infeasible models name the likely cause | done (2026-11-20) |
+| 6. Command line | `--engine nw5` by default for `design` and `simulate` (statistics JSON), `--engine nw4`, `convert`. Catalogues found next to the input | done (2026-11-20) |
 | 7. Interface | NW5 tables and parameters, simulation review, comparison of revisions, source and JSON views, drag and drop import, valves, node positions | open |
 | 8. Documentation and release | docs, equivalence report, release | open |
 

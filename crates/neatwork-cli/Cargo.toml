@@ -13,6 +13,8 @@ path = "src/main.rs"
 neatwork-core = { path = "../neatwork-core" }
 neatwork-nw5 = { path = "../neatwork-nw5" }
 neatwork-nw5-io = { path = "../neatwork-nw5-io" }
+neatwork-nw5-design = { path = "../neatwork-nw5-design" }
+neatwork-nw5-sim = { path = "../neatwork-nw5-sim" }
 clap = { version = "4.6.9", features = ["derive"] }
 
 [lints]

@@ -34,7 +34,7 @@ pub mod post;
 pub mod prepare;
 mod rng;
 
-use neatwork_nw5::{Network, Result};
+use neatwork_nw5::{Error, Network, Result};
 
 pub use loads::LoadTable;
 pub use model::{LpModel, Solution};
@@ -207,7 +207,7 @@ pub fn design_with_progress(
     )?;
 
     progress(Stage::Solve);
-    let solution = model::solve_model(&lp)?;
+    let solution = model::solve_model(&lp).map_err(|e| explain_failure(e, &lp, &prep.arcs))?;
     warnings.extend(solution.warnings.iter().cloned());
 
     progress(Stage::PostProcess);
@@ -334,4 +334,31 @@ fn output_network(
         )
     });
     net
+}
+
+/// Add the likely causes of an infeasible model to a solver failure.
+fn explain_failure(e: Error, lp: &model::LpModel, arcs: &[prepare::DesignArc]) -> Error {
+    let Error::Solver(msg) = e else { return e };
+    let hints: Vec<String> = lp
+        .infeasibility_hints()
+        .into_iter()
+        .filter_map(|(a, h)| {
+            let arc = arcs.get(a)?;
+            Some(match h {
+                model::InfeasibilityHint::NoAllowedPipe => format!(
+                    "no catalogue pipe holds the static pressure ({:.1} m) on the link to {}",
+                    arc.pmax, arc.succ
+                ),
+                model::InfeasibilityHint::NoHead(h) => format!(
+                    "no head left for losses at {} ({h:.2} m): the node is at or above the source, or its required pressure is too high",
+                    arc.succ
+                ),
+            })
+        })
+        .collect();
+    if hints.is_empty() {
+        Error::Solver(msg)
+    } else {
+        Error::Solver(format!("{msg}\nLikely cause:\n  {}", hints.join("\n  ")))
+    }
 }

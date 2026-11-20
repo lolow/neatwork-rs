@@ -1,5 +1,5 @@
 bin.name = "neatwork"
-args = ["design", "baseexample.tpo", "-o", "baseexample.dsg"]
+args = ["design", "baseexample.tpo", "-o", "baseexample.dsg", "--engine", "nw4"]
 status.code = 0
 fs.sandbox = true
 fs.base = "design-baseexample.in"

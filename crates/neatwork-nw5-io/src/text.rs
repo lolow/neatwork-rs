@@ -43,7 +43,10 @@ pub fn param_text(value: &str) -> String {
 /// The catalogue IDs are those a 7-field catalogue gets on reading
 /// (`D001`, `D002`, ... in order of increasing diameter).
 pub fn generated_ids(pipes: &[Pipe]) -> bool {
-    pipes.iter().enumerate().all(|(k, p)| p.id == format!("D{:03}", k + 1))
+    pipes
+        .iter()
+        .enumerate()
+        .all(|(k, p)| p.id == format!("D{:03}", k + 1))
         && pipes.windows(2).all(|w| w[0].diameter <= w[1].diameter)
 }
 
@@ -63,13 +66,19 @@ fn comments(out: &mut String, net: &Network) {
 }
 
 fn params(out: &mut String, net: &Network) {
-    let rows = canonical_params(&net.params).into_iter().map(|(k, v)| format!("{k},{}", param_text(&v)));
+    let rows = canonical_params(&net.params)
+        .into_iter()
+        .map(|(k, v)| format!("{k},{}", param_text(&v)));
     section(out, "!Default properties", rows);
 }
 
 fn loadfactor(out: &mut String, net: &Network) {
     if !net.loadfactor_raw.is_empty() {
-        section(out, "!loadfactor", net.loadfactor_raw.iter().map(|r| r.join(",")));
+        section(
+            out,
+            "!loadfactor",
+            net.loadfactor_raw.iter().map(|r| r.join(",")),
+        );
     }
 }
 
@@ -96,7 +105,15 @@ fn sorted_clients(net: &Network) -> Vec<String> {
     });
     clients
         .iter()
-        .map(|c| format!("{},{},{},{}", c.id, c.terminal, g15(c.probability), g15(c.target_flow)))
+        .map(|c| {
+            format!(
+                "{},{},{},{}",
+                c.id,
+                c.terminal,
+                g15(c.probability),
+                g15(c.target_flow)
+            )
+        })
         .collect()
 }
 
@@ -105,7 +122,13 @@ fn demand(out: &mut String, net: &Network) {
         section(out, "!Clients", sorted_clients(net));
     }
     if !net.terminals.is_empty() {
-        section(out, "!Borne", net.terminals.iter().map(|t| format!("{},{},N", t.id, g15(t.pressure))));
+        section(
+            out,
+            "!Borne",
+            net.terminals
+                .iter()
+                .map(|t| format!("{},{},N", t.id, g15(t.pressure))),
+        );
     }
 }
 
@@ -128,13 +151,27 @@ pub fn write_tpo(net: &Network) -> String {
         &mut out,
         "!Nodes",
         net.nodes.iter().map(|n| {
-            let taps = n
-                .taps
-                .unwrap_or_else(|| net.clients.iter().filter(|c| c.terminal == n.id).count() as f64);
-            format!("{},{},{},{},{},{}", n.id, g15(n.elevation), g15(n.x), g15(n.y), g15(taps), n.status.code())
+            let taps = n.taps.unwrap_or_else(|| {
+                net.clients.iter().filter(|c| c.terminal == n.id).count() as f64
+            });
+            format!(
+                "{},{},{},{},{},{}",
+                n.id,
+                g15(n.elevation),
+                g15(n.x),
+                g15(n.y),
+                g15(taps),
+                n.status.code()
+            )
         }),
     );
-    section(&mut out, "!Pipes", net.arcs.iter().map(|a| format!("{},{},{}", a.from, a.to, g15(a.length))));
+    section(
+        &mut out,
+        "!Pipes",
+        net.arcs
+            .iter()
+            .map(|a| format!("{},{},{}", a.from, a.to, g15(a.length))),
+    );
     params(&mut out, net);
     loadfactor(&mut out, net);
     if !net.pipes.is_empty() {
@@ -152,7 +189,11 @@ pub fn write_tpo(net: &Network) -> String {
         );
     }
     if !net.orifices.is_empty() {
-        section(&mut out, "!Orifices", net.orifices.iter().map(|d| format!("{},N", g15(*d))));
+        section(
+            &mut out,
+            "!Orifices",
+            net.orifices.iter().map(|d| format!("{},N", g15(*d))),
+        );
     }
     demand(&mut out, net);
     extra(&mut out, net);
@@ -209,17 +250,31 @@ pub fn write_dsg(net: &Network) -> String {
     params(&mut out, net);
     loadfactor(&mut out, net);
     if !net.pipes.is_empty() {
-        section(&mut out, "!Diameters", net.pipes.iter().map(|p| format!("{},{},N", p.id, catalogue_row(p))));
+        section(
+            &mut out,
+            "!Diameters",
+            net.pipes
+                .iter()
+                .map(|p| format!("{},{},N", p.id, catalogue_row(p))),
+        );
     }
     if !net.orifices.is_empty() {
-        section(&mut out, "!Orifices", net.orifices.iter().map(|d| format!("{},N,N,N,N,N", g15(*d))));
+        section(
+            &mut out,
+            "!Orifices",
+            net.orifices
+                .iter()
+                .map(|d| format!("{},N,N,N,N,N", g15(*d))),
+        );
     }
     demand(&mut out, net);
     if !net.loadflow.is_empty() {
         section(
             &mut out,
             "!loadflow",
-            net.loadflow.iter().map(|(succ, q, m)| format!("{succ},{},{}", g15(*q), g15(*m))),
+            net.loadflow
+                .iter()
+                .map(|(succ, q, m)| format!("{succ},{},{}", g15(*q), g15(*m))),
         );
     }
     extra(&mut out, net);

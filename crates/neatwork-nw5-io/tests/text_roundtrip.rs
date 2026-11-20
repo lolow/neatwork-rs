@@ -16,8 +16,17 @@ fn every_example_round_trips_in_its_own_format() -> TestResult {
         let a = read(p)?;
         let is_dsg = p.extension().is_some_and(|e| e == "dsg");
         let text = if is_dsg { write_dsg(&a) } else { write_tpo(&a) };
-        assert!(text.ends_with('\n') && !text.contains('\r'), "{}: LF and final newline", p.display());
-        let b = if is_dsg { read_dsg(&a.name, &text)? } else { read_tpo(&a.name, &text)? }.network;
+        assert!(
+            text.ends_with('\n') && !text.contains('\r'),
+            "{}: LF and final newline",
+            p.display()
+        );
+        let b = if is_dsg {
+            read_dsg(&a.name, &text)?
+        } else {
+            read_tpo(&a.name, &text)?
+        }
+        .network;
         let d = compare(&a, &b, Skip::default());
         if !d.is_empty() {
             failures.push(format!("{}:\n  {}", p.display(), d.join("\n  ")));
@@ -46,7 +55,8 @@ fn every_dsg_writes_back_to_the_same_text_after_normalisation() -> TestResult {
 /// back unchanged, except `ID2 = 0` which becomes `fictif` (12.3 rule 3).
 #[test]
 fn toy_bbd_dsg_golden() -> TestResult {
-    let path = reference().join("neatwork5/examples/dsg_examples/Toy/Toy_bbd_Secu1.00_fusion0_split0.dsg");
+    let path =
+        reference().join("neatwork5/examples/dsg_examples/Toy/Toy_bbd_Secu1.00_fusion0_split0.dsg");
     let original = String::from_utf8_lossy(&std::fs::read(&path)?).to_string();
     let net = read(&path)?;
     let written = write_dsg(&net);
@@ -179,7 +189,10 @@ fn tpo_with_generated_ids_writes_seven_fields() -> TestResult {
     let path = reference().join("neatwork5/examples/tpo_examples/Toy/Toy_bbd.tpo");
     let net = read(&path)?;
     let tpo = write_tpo(&net);
-    assert!(tpo.contains("\n!Diameters\n\"1/2\"\"\",13.5,0.0182,0.2799,200,1,0.0015\n"), "{tpo}");
+    assert!(
+        tpo.contains("\n!Diameters\n\"1/2\"\"\",13.5,0.0182,0.2799,200,1,0.0015\n"),
+        "{tpo}"
+    );
     assert!(tpo.contains("\n!Orifices\n0.0017,N\n"));
     assert!(tpo.starts_with("!Commentaires\nbbd = modele de base"));
     assert!(tpo.contains("\nfaucetcoef,1.87e-08\n"));
@@ -189,7 +202,13 @@ fn tpo_with_generated_ids_writes_seven_fields() -> TestResult {
 #[test]
 fn db_catalogues_round_trip() -> TestResult {
     let dir = reference().join("neatwork5/examples/tpo_examples");
-    for f in ["Ceiba/DiamBaseCeiba.db", "Cruscade/DiamBaseCruscade.db", "Red 1/DiamBaseRed 1.db", "Toy/DiamBaseToy.db", "ToyXlx/DiamBaseToyXlx.db"] {
+    for f in [
+        "Ceiba/DiamBaseCeiba.db",
+        "Cruscade/DiamBaseCruscade.db",
+        "Red 1/DiamBaseRed 1.db",
+        "Toy/DiamBaseToy.db",
+        "ToyXlx/DiamBaseToyXlx.db",
+    ] {
         let a = read_diameters_db(&std::fs::read_to_string(dir.join(f))?)?;
         let text = write_diameters_db(&a);
         assert!(text.ends_with('\n'));
@@ -201,8 +220,13 @@ fn db_catalogues_round_trip() -> TestResult {
         let text = write_orifices_db(&a);
         assert_eq!(read_orifices_db(&text), a, "{f}");
     }
-    assert_eq!(write_orifices_db(&[0.0017, 1e-6, 1.0]), "0.0017\n1e-06\n1\n");
+    assert_eq!(
+        write_orifices_db(&[0.0017, 1e-6, 1.0]),
+        "0.0017\n1e-06\n1\n"
+    );
     let toy = read_diameters_db(&std::fs::read_to_string(dir.join("Toy/DiamBaseToy.db"))?)?;
-    assert!(write_diameters_db(&toy).starts_with("1/2\",13.5,0.0182,0.2799,200,1,0.0015\n3/4\",17,"));
+    assert!(
+        write_diameters_db(&toy).starts_with("1/2\",13.5,0.0182,0.2799,200,1,0.0015\n3/4\",17,")
+    );
     Ok(())
 }

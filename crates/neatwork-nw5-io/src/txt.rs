@@ -54,11 +54,18 @@ impl Table {
     /// many tabs as commas, or neither, else comma.
     fn parse(file: &str, text: &str) -> Table {
         let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-        let mut lines = text.lines().map(|l| l.trim_end_matches('\r')).filter(|l| !l.trim().is_empty());
+        let mut lines = text
+            .lines()
+            .map(|l| l.trim_end_matches('\r'))
+            .filter(|l| !l.trim().is_empty());
         let first = lines.next().unwrap_or("");
         let (tabs, commas) = (first.matches('\t').count(), first.matches(',').count());
         let delim = if tabs >= commas { '\t' } else { ',' };
-        let split = |l: &str| l.split(delim).map(|f| f.trim().to_string()).collect::<Vec<_>>();
+        let split = |l: &str| {
+            l.split(delim)
+                .map(|f| f.trim().to_string())
+                .collect::<Vec<_>>()
+        };
         Table {
             file: file.to_string(),
             header: split(first),
@@ -67,14 +74,19 @@ impl Table {
     }
 
     fn col(&self, name: &str) -> Option<usize> {
-        self.header
-            .iter()
-            .position(|h| h == name)
-            .or_else(|| self.header.iter().position(|h| h.eq_ignore_ascii_case(name)))
+        self.header.iter().position(|h| h == name).or_else(|| {
+            self.header
+                .iter()
+                .position(|h| h.eq_ignore_ascii_case(name))
+        })
     }
 
     fn require(&self, base: &str, names: &[&str]) -> Result<()> {
-        let missing: Vec<&str> = names.iter().copied().filter(|n| self.col(n).is_none()).collect();
+        let missing: Vec<&str> = names
+            .iter()
+            .copied()
+            .filter(|n| self.col(n).is_none())
+            .collect();
         if missing.is_empty() {
             Ok(())
         } else {
@@ -92,7 +104,9 @@ impl Table {
 
     fn num(&self, row: &[String], name: &str) -> Result<f64> {
         let t = self.text(row, name).unwrap_or("");
-        num(t).ok_or_else(|| Error::Format(format!("{}: column {name}: not a number `{t}`", self.file)))
+        num(t).ok_or_else(|| {
+            Error::Format(format!("{}: column {name}: not a number `{t}`", self.file))
+        })
     }
 }
 
@@ -114,7 +128,8 @@ fn statuses(codes: &[f64]) -> Result<Vec<NodeStatus>> {
         .iter()
         .map(|&c| {
             if standard {
-                NodeStatus::from_code(c as i32).ok_or_else(|| Error::Format("DsgNodes.statut".into()))
+                NodeStatus::from_code(c as i32)
+                    .ok_or_else(|| Error::Format("DsgNodes.statut".into()))
             } else if c == min {
                 Ok(NodeStatus::Junction)
             } else if c == max {
@@ -133,13 +148,27 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
     let by_diam = arcs.col("diam1").is_some() && arcs.col("diam2").is_some();
     let by_id = arcs.col("ID1").is_some() && arcs.col("ID2").is_some();
     if !(by_diam || by_id) {
-        return Err(Error::Format(format!("DsgArcs: il faut (diam1,diam2) ou (ID1,ID2) dans {}.", arcs.file)));
+        return Err(Error::Format(format!(
+            "DsgArcs: il faut (diam1,diam2) ou (ID1,ID2) dans {}.",
+            arcs.file
+        )));
     }
     arcs.require("DsgArcs", &["pred", "succ", "lon", "lon1", "lon2"])?;
     let clients = Table::parse(&file("DsgClients"), files.clients);
     clients.require("DsgClients", &["borne", "client", "proba", "cible"])?;
     let nodes = Table::parse(&file("DsgNodes"), files.nodes);
-    nodes.require("DsgNodes", &["noeud", "haut", "xdata", "ydata", "orif_ideal", "orif_com", "statut"])?;
+    nodes.require(
+        "DsgNodes",
+        &[
+            "noeud",
+            "haut",
+            "xdata",
+            "ydata",
+            "orif_ideal",
+            "orif_com",
+            "statut",
+        ],
+    )?;
     let dbase = Table::parse(&file("DsgDbase"), files.dbase);
     dbase.require("DsgDbase", &["ID", "diam", "cost"])?;
     let param = Table::parse(&file("DsgParam"), files.param);
@@ -158,11 +187,26 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
     }
     for r in &dbase.rows {
         let id = dbase.text(r, "ID").unwrap_or("").to_string();
-        let text = |names: &[&str]| names.iter().find_map(|n| dbase.text(r, n)).unwrap_or("").to_string();
-        let number = |names: &[&str]| names.iter().find_map(|n| dbase.text(r, n).and_then(num)).unwrap_or(0.0);
+        let text = |names: &[&str]| {
+            names
+                .iter()
+                .find_map(|n| dbase.text(r, n))
+                .unwrap_or("")
+                .to_string()
+        };
+        let number = |names: &[&str]| {
+            names
+                .iter()
+                .find_map(|n| dbase.text(r, n).and_then(num))
+                .unwrap_or(0.0)
+        };
         let nominal = text(&["Nominal"]);
         net.pipes.push(Pipe {
-            nominal: if nominal.is_empty() { id.clone() } else { nominal },
+            nominal: if nominal.is_empty() {
+                id.clone()
+            } else {
+                nominal
+            },
             sdr: text(&["SDR", "materiau"]),
             diameter: dbase.num(r, "diam")?,
             cost: dbase.num(r, "cost")?,
@@ -172,7 +216,11 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
             id,
         });
     }
-    let codes = nodes.rows.iter().map(|r| nodes.num(r, "statut")).collect::<Result<Vec<_>>>()?;
+    let codes = nodes
+        .rows
+        .iter()
+        .map(|r| nodes.num(r, "statut"))
+        .collect::<Result<Vec<_>>>()?;
     for (r, status) in nodes.rows.iter().zip(statuses(&codes)?) {
         net.nodes.push(Node {
             id: nodes.text(r, "noeud").unwrap_or("").to_string(),
@@ -195,7 +243,11 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
             .filter(|p| (p.diameter - d).abs() <= 1e-12 * d.abs().max(1.0))
             .min_by(|a, b| a.cost.total_cmp(&b.cost))
             .map(|p| Some(p.id.clone()))
-            .ok_or_else(|| Error::Format(format!("DsgArcs: diameter {d} of arc {from} -> {to} is not in DsgDbase")))
+            .ok_or_else(|| {
+                Error::Format(format!(
+                    "DsgArcs: diameter {d} of arc {from} -> {to} is not in DsgDbase"
+                ))
+            })
     };
     let mut arc_rows = Vec::new();
     for r in &arcs.rows {
@@ -208,8 +260,16 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
                 pipe_ref(arcs.text(r, "ID2").map(str::to_string), length2),
             )
         } else {
-            let d1 = if length1 > 0.0 { arcs.num(r, "diam1")? } else { 0.0 };
-            let d2 = if length2 > 0.0 { arcs.num(r, "diam2")? } else { 0.0 };
+            let d1 = if length1 > 0.0 {
+                arcs.num(r, "diam1")?
+            } else {
+                0.0
+            };
+            let d2 = if length2 > 0.0 {
+                arcs.num(r, "diam2")?
+            } else {
+                0.0
+            };
             (pipe_of(d1, &from, &to)?, pipe_of(d2, &from, &to)?)
         };
         arc_rows.push(Arc {
@@ -244,7 +304,10 @@ pub fn read_txt_design(name: &str, files: &TxtFiles<'_>, client_flow: FlowUnit) 
         warnings.push("non-uniform Txt demand: bounded_flow set to 1".into());
         net.params.set("bounded_flow", "1");
     }
-    Ok(Read { network: net, warnings })
+    Ok(Read {
+        network: net,
+        warnings,
+    })
 }
 
 /// Read the Txt design `<dir>/<prefix>Dsg{Arcs,Clients,Nodes,Dbase,Param}.txt`.
@@ -255,8 +318,13 @@ pub fn read_txt_folder(dir: &Path, prefix: &str, client_flow: FlowUnit) -> Resul
             .map(|b| String::from_utf8_lossy(&b).into_owned())
             .map_err(|e| Error::Io(format!("Fichier introuvable : {}: {e}", p.display())))
     };
-    let (arcs, clients, nodes, dbase, param) =
-        (load("DsgArcs")?, load("DsgClients")?, load("DsgNodes")?, load("DsgDbase")?, load("DsgParam")?);
+    let (arcs, clients, nodes, dbase, param) = (
+        load("DsgArcs")?,
+        load("DsgClients")?,
+        load("DsgNodes")?,
+        load("DsgDbase")?,
+        load("DsgParam")?,
+    );
     let files = TxtFiles {
         arcs: &arcs,
         clients: &clients,

@@ -1,4 +1,7 @@
-#![expect(clippy::unwrap_used, reason = "test code: a failure is the test result")]
+#![expect(
+    clippy::unwrap_used,
+    reason = "test code: a failure is the test result"
+)]
 
 //! Every example `.tpo` and `.dsg` of NW5 and NW4 reads without error.
 

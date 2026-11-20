@@ -15,7 +15,11 @@ fn collect(dir: &Path, ext: &[&str], out: &mut Vec<PathBuf>) -> std::io::Result<
         let p = e?.path();
         if p.is_dir() {
             collect(&p, ext, out)?;
-        } else if p.extension().and_then(|e| e.to_str()).is_some_and(|e| ext.contains(&e)) {
+        } else if p
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| ext.contains(&e))
+        {
             out.push(p);
         }
     }
@@ -27,13 +31,19 @@ pub fn example_files() -> std::io::Result<Vec<PathBuf>> {
     let root = reference();
     let mut list = Vec::new();
     collect(&root.join("neatwork5/examples"), &["tpo", "dsg"], &mut list)?;
-    collect(&root.join("neatwork2024/sample_projects"), &["tpo", "dsg"], &mut list)?;
+    collect(
+        &root.join("neatwork2024/sample_projects"),
+        &["tpo", "dsg"],
+        &mut list,
+    )?;
     list.sort();
     Ok(list)
 }
 
 pub fn read(path: &Path) -> Result<Network, String> {
-    neatwork_nw5::read::read_file(path).map(|r| r.network).map_err(|e| e.to_string())
+    neatwork_nw5::read::read_file(path)
+        .map(|r| r.network)
+        .map_err(|e| e.to_string())
 }
 
 pub fn close(a: f64, b: f64) -> bool {
@@ -52,7 +62,11 @@ fn same_text_or_number(a: &str, b: &str) -> bool {
 }
 
 fn param_names(p: &Params) -> Vec<String> {
-    let mut v: Vec<String> = p.entries.iter().map(|(k, _)| Params::canonical(k).to_string()).collect();
+    let mut v: Vec<String> = p
+        .entries
+        .iter()
+        .map(|(k, _)| Params::canonical(k).to_string())
+        .collect();
     v.sort();
     v.dedup();
     v
@@ -80,7 +94,10 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
     if !skip.name {
         f(a.name == b.name, format!("name {} / {}", a.name, b.name));
     }
-    f(a.nodes.len() == b.nodes.len(), format!("node count {} / {}", a.nodes.len(), b.nodes.len()));
+    f(
+        a.nodes.len() == b.nodes.len(),
+        format!("node count {} / {}", a.nodes.len(), b.nodes.len()),
+    );
     for (x, y) in a.nodes.iter().zip(&b.nodes) {
         let ok = x.id == y.id
             && close(x.elevation, y.elevation)
@@ -92,7 +109,10 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
             && close(x.taps.unwrap_or(-1.0), y.taps.unwrap_or(-1.0));
         f(ok, format!("node {x:?} / {y:?}"));
     }
-    f(a.arcs.len() == b.arcs.len(), format!("arc count {} / {}", a.arcs.len(), b.arcs.len()));
+    f(
+        a.arcs.len() == b.arcs.len(),
+        format!("arc count {} / {}", a.arcs.len(), b.arcs.len()),
+    );
     for (x, y) in a.arcs.iter().zip(&b.arcs) {
         let ok = x.id == y.id
             && x.from == y.from
@@ -112,7 +132,10 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
         c
     };
     let (ca, cb) = (sorted(a), sorted(b));
-    f(ca.len() == cb.len(), format!("client count {} / {}", ca.len(), cb.len()));
+    f(
+        ca.len() == cb.len(),
+        format!("client count {} / {}", ca.len(), cb.len()),
+    );
     for (x, y) in ca.iter().zip(&cb) {
         let ok = x.id == y.id
             && x.terminal == y.terminal
@@ -120,11 +143,20 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
             && close(x.target_flow, y.target_flow);
         f(ok, format!("client {x:?} / {y:?}"));
     }
-    f(a.terminals.len() == b.terminals.len(), "terminal count".into());
+    f(
+        a.terminals.len() == b.terminals.len(),
+        "terminal count".into(),
+    );
     for (x, y) in a.terminals.iter().zip(&b.terminals) {
-        f(x.id == y.id && close(x.pressure, y.pressure), format!("terminal {x:?} / {y:?}"));
+        f(
+            x.id == y.id && close(x.pressure, y.pressure),
+            format!("terminal {x:?} / {y:?}"),
+        );
     }
-    f(a.pipes.len() == b.pipes.len(), format!("pipe count {} / {}", a.pipes.len(), b.pipes.len()));
+    f(
+        a.pipes.len() == b.pipes.len(),
+        format!("pipe count {} / {}", a.pipes.len(), b.pipes.len()),
+    );
     for (x, y) in a.pipes.iter().zip(&b.pipes) {
         let ok = x.id == y.id
             && x.nominal == y.nominal
@@ -137,21 +169,40 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
         f(ok, format!("pipe {x:?} / {y:?}"));
     }
     f(
-        a.orifices.len() == b.orifices.len() && a.orifices.iter().zip(&b.orifices).all(|(x, y)| close(*x, *y)),
+        a.orifices.len() == b.orifices.len()
+            && a.orifices
+                .iter()
+                .zip(&b.orifices)
+                .all(|(x, y)| close(*x, *y)),
         format!("orifices {:?} / {:?}", a.orifices, b.orifices),
     );
     let names = param_names(&a.params);
-    f(names == param_names(&b.params), format!("param names {names:?} / {:?}", param_names(&b.params)));
+    f(
+        names == param_names(&b.params),
+        format!("param names {names:?} / {:?}", param_names(&b.params)),
+    );
     for n in &names {
         let (x, y) = (a.params.raw(n).unwrap_or(""), b.params.raw(n).unwrap_or(""));
         f(same_text_or_number(x, y), format!("param {n}: {x} / {y}"));
     }
-    f(a.loadflow.len() == b.loadflow.len(), "loadflow count".into());
+    f(
+        a.loadflow.len() == b.loadflow.len(),
+        "loadflow count".into(),
+    );
     for (x, y) in a.loadflow.iter().zip(&b.loadflow) {
-        f(x.0 == y.0 && close(x.1, y.1) && close(x.2, y.2), format!("loadflow {x:?} / {y:?}"));
+        f(
+            x.0 == y.0 && close(x.1, y.1) && close(x.2, y.2),
+            format!("loadflow {x:?} / {y:?}"),
+        );
     }
-    f(a.loadfactor_raw == b.loadfactor_raw, "loadfactor rows".into());
-    f(a.comments == b.comments, format!("comments {:?} / {:?}", a.comments, b.comments));
+    f(
+        a.loadfactor_raw == b.loadfactor_raw,
+        "loadfactor rows".into(),
+    );
+    f(
+        a.comments == b.comments,
+        format!("comments {:?} / {:?}", a.comments, b.comments),
+    );
     if skip.extra_order {
         let canon = |n: &Network| {
             let mut v: Vec<(String, Vec<String>)> = n
@@ -164,7 +215,13 @@ pub fn compare(a: &Network, b: &Network, skip: Skip) -> Vec<String> {
         };
         f(canon(a) == canon(b), "extra sections".into());
     } else {
-        f(a.extra_sections == b.extra_sections, format!("extra sections {:?} / {:?}", a.extra_sections, b.extra_sections));
+        f(
+            a.extra_sections == b.extra_sections,
+            format!(
+                "extra sections {:?} / {:?}",
+                a.extra_sections, b.extra_sections
+            ),
+        );
     }
     d
 }

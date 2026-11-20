@@ -15,7 +15,15 @@ fn every_example_round_trips_through_nw_json() -> TestResult {
         let a = read(&p)?;
         let text = write_nw_json(&a);
         let b = read_nw_json(&a.name, &text)?.network;
-        let d = compare(&a, &b, Skip { open: true, extra_order: true, name: false });
+        let d = compare(
+            &a,
+            &b,
+            Skip {
+                open: true,
+                extra_order: true,
+                name: false,
+            },
+        );
         if !d.is_empty() {
             failures.push(format!("{}:\n  {}", p.display(), d.join("\n  ")));
         }
@@ -34,7 +42,14 @@ fn every_example_round_trips_through_domain_json() -> TestResult {
         }
         let text = write_domain_json(&a);
         let b = read_domain_json(&text)?.network;
-        let d = compare(&a, &b, Skip { extra_order: true, ..Skip::default() });
+        let d = compare(
+            &a,
+            &b,
+            Skip {
+                extra_order: true,
+                ..Skip::default()
+            },
+        );
         if !d.is_empty() {
             failures.push(format!("{}:\n  {}", p.display(), d.join("\n  ")));
         }
@@ -53,9 +68,17 @@ fn behaviour_ids_match_the_application() {
 
 #[test]
 fn toy_bbd_domain_json_snippets() -> TestResult {
-    let net = read(&reference().join("neatwork5/examples/dsg_examples/Toy/Toy_bbd_Secu1.00_fusion0_split0.dsg"))?;
+    let net = read(
+        &reference()
+            .join("neatwork5/examples/dsg_examples/Toy/Toy_bbd_Secu1.00_fusion0_split0.dsg"),
+    )?;
     let j = write_domain_json(&net);
-    assert!(j.starts_with("{\n  \"name\": \"Toy_bbd_Secu1.00_fusion0_split0\",\n  \"sourceFormat\": \"DSG\",\n"), "{j}");
+    assert!(
+        j.starts_with(
+            "{\n  \"name\": \"Toy_bbd_Secu1.00_fusion0_split0\",\n  \"sourceFormat\": \"DSG\",\n"
+        ),
+        "{j}"
+    );
     assert!(j.contains("\"behaviorId\": \"CB_BAE72D2A3E\""));
     assert!(j.contains("\"name\": \"Imported behavior 1\""));
     assert!(j.contains("\"Nominal\": \"\\\"1/2\\\"\\\"\\\"\""));
@@ -64,7 +87,12 @@ fn toy_bbd_domain_json_snippets() -> TestResult {
     assert!(j.contains("\"diameter_mm\": 1.7"));
     assert_eq!(j.matches("\"behaviorId\": \"CB_").count(), 16 + 3);
     let nw = write_nw_json(&net);
-    assert!(nw.starts_with("{\n  \"schema\": \"NW-json-v1\",\n  \"TN\": [\n    {\n      \"noeud\": \"Source\",\n"), "{nw}");
+    assert!(
+        nw.starts_with(
+            "{\n  \"schema\": \"NW-json-v1\",\n  \"TN\": [\n    {\n      \"noeud\": \"Source\",\n"
+        ),
+        "{nw}"
+    );
     assert!(nw.contains("\"ID2\": \"fictif\""));
     Ok(())
 }
@@ -108,8 +136,20 @@ fn matlab_style_json() -> TestResult {
     assert_eq!(n.params.get("uniform_dem"), 1.0);
     assert_eq!(n.loadflow, vec![("150".to_string(), 0.4, -0.25)]);
     assert_eq!(n.orifices, vec![0.0031, 0.0033]);
-    let costs = n.extra_sections.iter().find(|(h, _)| h == "!Costs").map(|(_, l)| l.clone());
-    assert_eq!(costs, Some(vec!["costOptim,28".into(), "costInter,28".into(), "costFinal,28".into(), "costFixed,0".into()]));
+    let costs = n
+        .extra_sections
+        .iter()
+        .find(|(h, _)| h == "!Costs")
+        .map(|(_, l)| l.clone());
+    assert_eq!(
+        costs,
+        Some(vec![
+            "costOptim,28".into(),
+            "costInter,28".into(),
+            "costFinal,28".into(),
+            "costFixed,0".into()
+        ])
+    );
     Ok(())
 }
 
@@ -142,10 +182,20 @@ fn application_import_json() -> TestResult {
     assert_eq!(n.pipes[0].max_pressure, 100.0);
     assert_eq!(n.orifices, vec![0.002]);
     let bad = r#"{"tables": {"nodes": [], "pipes": [], "clients": [{"client": "x", "borne": "P", "behaviorId": "CB_1"}]}}"#;
-    let e = read_domain_json(bad).err().map(|e| e.to_string()).unwrap_or_default();
+    let e = read_domain_json(bad)
+        .err()
+        .map(|e| e.to_string())
+        .unwrap_or_default();
     assert!(e.contains("Unknown client behavior 'CB_1'."), "{e}");
-    let bad = r#"{"tables": {"nodes": [], "pipes": [], "clients": [{"client": "x", "borne": "P"}]}}"#;
-    let e = read_domain_json(bad).err().map(|e| e.to_string()).unwrap_or_default();
-    assert!(e.contains("Client 'x' has neither behaviorId nor complete legacy demand values."), "{e}");
+    let bad =
+        r#"{"tables": {"nodes": [], "pipes": [], "clients": [{"client": "x", "borne": "P"}]}}"#;
+    let e = read_domain_json(bad)
+        .err()
+        .map(|e| e.to_string())
+        .unwrap_or_default();
+    assert!(
+        e.contains("Client 'x' has neither behaviorId nor complete legacy demand values."),
+        "{e}"
+    );
     Ok(())
 }

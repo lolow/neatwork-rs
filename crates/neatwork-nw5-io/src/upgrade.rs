@@ -51,8 +51,15 @@ pub fn upgrade_nw4_network(input: &Network) -> (Network, Vec<String>) {
             Some(e) => e.1 += 1,
             None => {
                 taps.push((parent.clone(), 1));
-                if let (Some(f), Some(p)) = (input.node(faucet).cloned(), net.nodes.iter_mut().find(|n| n.id == *parent)) {
-                    *p = neatwork_nw5::Node { id: parent.clone(), taps: None, ..f };
+                if let (Some(f), Some(p)) = (
+                    input.node(faucet).cloned(),
+                    net.nodes.iter_mut().find(|n| n.id == *parent),
+                ) {
+                    *p = neatwork_nw5::Node {
+                        id: parent.clone(),
+                        taps: None,
+                        ..f
+                    };
                 }
             }
         }
@@ -63,19 +70,39 @@ pub fn upgrade_nw4_network(input: &Network) -> (Network, Vec<String>) {
     for (k, a) in net.arcs.iter_mut().enumerate() {
         a.id = format!("A{}", k + 1);
     }
-    net.loadfactor_raw.retain(|r| r.first().is_none_or(|n| !is_faucet(n)));
+    net.loadfactor_raw
+        .retain(|r| r.first().is_none_or(|n| !is_faucet(n)));
     if !faucets.is_empty() {
-        warnings.push(format!("{} fictitious faucets merged into {} terminals", faucets.len(), taps.len()));
+        warnings.push(format!(
+            "{} fictitious faucets merged into {} terminals",
+            faucets.len(),
+            taps.len()
+        ));
     }
-    for (name, value) in [("pressure", "2"), ("bounded_flow", "0"), ("uniform_dem", "1")] {
+    for (name, value) in [
+        ("pressure", "2"),
+        ("bounded_flow", "0"),
+        ("uniform_dem", "1"),
+    ] {
         if net.params.raw(name).is_none() {
             net.params.set(name, value);
         }
     }
-    let (p, q, pressure) = (net.params.get("opentaps"), net.params.get("targetflow"), net.params.get("pressure"));
+    let (p, q, pressure) = (
+        net.params.get("opentaps"),
+        net.params.get("targetflow"),
+        net.params.get("pressure"),
+    );
     net.clients.clear();
-    for n in net.nodes.iter().filter(|n| n.status == NodeStatus::Terminal) {
-        let k = taps.iter().find(|(id, _)| *id == n.id).map_or(1, |(_, k)| *k);
+    for n in net
+        .nodes
+        .iter()
+        .filter(|n| n.status == NodeStatus::Terminal)
+    {
+        let k = taps
+            .iter()
+            .find(|(id, _)| *id == n.id)
+            .map_or(1, |(_, k)| *k);
         for i in 1..=k {
             net.clients.push(Client {
                 id: format!("C{i}{}", n.id),
@@ -85,12 +112,16 @@ pub fn upgrade_nw4_network(input: &Network) -> (Network, Vec<String>) {
             });
         }
     }
-    net.clients.sort_by(|a, b| (&a.terminal, &a.id).cmp(&(&b.terminal, &b.id)));
+    net.clients
+        .sort_by(|a, b| (&a.terminal, &a.id).cmp(&(&b.terminal, &b.id)));
     net.terminals = net
         .nodes
         .iter()
         .filter(|n| n.status == NodeStatus::Terminal)
-        .map(|n| Terminal { id: n.id.clone(), pressure })
+        .map(|n| Terminal {
+            id: n.id.clone(),
+            pressure,
+        })
         .collect();
     warnings.extend(net.apply_client_data());
     (net, warnings)

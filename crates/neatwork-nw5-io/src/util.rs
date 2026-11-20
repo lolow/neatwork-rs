@@ -44,7 +44,11 @@ pub fn complete_demand(net: &mut Network) -> Vec<String> {
     let mut warnings = Vec::new();
     if net.clients.is_empty() {
         let (p, q) = (net.params.get("opentaps"), net.params.get("targetflow"));
-        for node in net.nodes.iter().filter(|n| n.status == NodeStatus::Terminal) {
+        for node in net
+            .nodes
+            .iter()
+            .filter(|n| n.status == NodeStatus::Terminal)
+        {
             let k = node.taps.unwrap_or(1.0).max(0.0) as usize;
             for i in 1..=k {
                 net.clients.push(Client {
@@ -55,9 +59,13 @@ pub fn complete_demand(net: &mut Network) -> Vec<String> {
                 });
             }
         }
-        net.clients.sort_by(|a, b| (&a.terminal, &a.id).cmp(&(&b.terminal, &b.id)));
+        net.clients
+            .sort_by(|a, b| (&a.terminal, &a.id).cmp(&(&b.terminal, &b.id)));
         if !net.clients.is_empty() {
-            warnings.push(format!("no client table: {} clients generated from the terminals", net.clients.len()));
+            warnings.push(format!(
+                "no client table: {} clients generated from the terminals",
+                net.clients.len()
+            ));
         }
     }
     if net.terminals.is_empty() {
@@ -72,7 +80,10 @@ pub fn complete_demand(net: &mut Network) -> Vec<String> {
             })
             .collect();
         if !net.terminals.is_empty() {
-            warnings.push(format!("no borne table: {} bornes generated", net.terminals.len()));
+            warnings.push(format!(
+                "no borne table: {} bornes generated",
+                net.terminals.len()
+            ));
         }
     }
     warnings

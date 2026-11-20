@@ -19,11 +19,21 @@ use neatwork_core::{
     about = "Design and simulate gravity-driven water networks (NeatWork engine)"
 )]
 struct Cli {
+    /// Engine: NeatWork 5 (default) or NeatWork 4 (the 2024 Java engine,
+    /// byte-identical output).
+    #[arg(long, global = true, value_enum, default_value_t = Engine::Nw5)]
+    engine: Engine,
     /// Language of the localized strings written to files.
     #[arg(long, global = true, value_enum, default_value_t = Lang::En)]
     locale: Lang,
     #[command(subcommand)]
     command: Command,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum Engine {
+    Nw5,
+    Nw4,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -45,7 +55,7 @@ impl From<Lang> for Locale {
     }
 }
 
-#[derive(Clone, Copy, ValueEnum)]
+#[derive(Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum Kind {
     Random,
     Tapbytap,
@@ -79,6 +89,18 @@ enum Command {
         /// Print the node pressure table.
         #[arg(long)]
         pressures: bool,
+        /// NW5: conditional value at risk for the loads (else VaR).
+        #[arg(long)]
+        cvar: bool,
+        /// NW5: Monte Carlo loads also for uniform demand.
+        #[arg(long)]
+        monte_carlo: bool,
+        /// NW5: seed of the Monte Carlo draws.
+        #[arg(long, default_value_t = 0)]
+        seed: u32,
+        /// NW5: parameter override NAME=VALUE (repeatable).
+        #[arg(long = "param", value_name = "NAME=VALUE")]
+        params: Vec<String>,
     },
     /// Solve an LP file written by `design --lp-dump` (or by the Java
     /// reference harness) with HiGHS; print one column value per line.
@@ -115,12 +137,14 @@ enum Command {
     Simulate {
         /// Design file.
         input: PathBuf,
-        /// Output file [default: <design>.<next number>.sim next to the input].
+        /// Output file [default: NW4 <design>.<next number>.sim, NW5
+        /// <design>.sim.json, next to the input].
         #[arg(short, long)]
         output: Option<PathBuf>,
-        /// Kind of simulation.
-        #[arg(long = "type", value_enum, default_value_t = Kind::Random)]
-        kind: Kind,
+        /// Kind of simulation [default: random]. NW5 runs random scenarios
+        /// only.
+        #[arg(long = "type", value_enum)]
+        kind: Option<Kind>,
         /// Number of random runs [default: simu.nbsim of default.properties, 100].
         #[arg(long)]
         nbsim: Option<String>,
@@ -133,9 +157,10 @@ enum Command {
         /// Open taps of a handmade simulation, comma separated.
         #[arg(long, value_delimiter = ',')]
         open: Vec<String>,
-        /// Seed of the random generator.
-        #[arg(long, default_value_t = 0)]
-        seed: u64,
+        /// Seed of the random generator [default: NW4 0, NW5 drawn and
+        /// printed].
+        #[arg(long)]
+        seed: Option<u64>,
         /// Diameter catalog used to refresh the design.
         #[arg(long)]
         diameters: Option<PathBuf>,
@@ -206,7 +231,26 @@ fn run(cli: Cli) -> Result<(), String> {
             lp_solution_out,
             lp_solution,
             pressures,
+            cvar,
+            monte_carlo,
+            seed,
+            params,
         } => {
+            if cli.engine == Engine::Nw5 {
+                return nw5::design(
+                    &input,
+                    output.as_deref(),
+                    &nw5::DesignArgs {
+                        diameters: diameters.clone(),
+                        orifices: orifices.clone(),
+                        cvar,
+                        monte_carlo,
+                        seed,
+                        params,
+                        pressures,
+                    },
+                );
+            }
             let text = read(&input)?;
             let name = project_name(&file_name(&input));
             let opts = DesignOptions {
@@ -280,11 +324,25 @@ fn run(cli: Cli) -> Result<(), String> {
             seed,
             diameters,
         } => {
+            if cli.engine == Engine::Nw5 {
+                return nw5::simulate(
+                    &input,
+                    output.as_deref(),
+                    &nw5::SimulateArgs {
+                        random: kind.is_none_or(|k| k == Kind::Random) && open.is_empty(),
+                        nbsim,
+                        opentaps,
+                        orifice,
+                        seed,
+                        diameters,
+                    },
+                );
+            }
             let text = read(&input)?;
             let name = project_name(&file_name(&input));
             let opts = SimulationOptions {
                 locale,
-                kind: match kind {
+                kind: match kind.unwrap_or(Kind::Random) {
                     Kind::Random => SimulationType::Random,
                     Kind::Tapbytap => SimulationType::TapByTap,
                     Kind::Handmade => SimulationType::Handmade,
@@ -293,7 +351,7 @@ fn run(cli: Cli) -> Result<(), String> {
                 open_taps: opentaps,
                 orifice,
                 open,
-                seed,
+                seed: seed.unwrap_or(0),
                 database: database(diameters.as_ref(), None)?,
             };
             let sim = simulate(&name, &text, &opts).map_err(|e| e.to_string())?;

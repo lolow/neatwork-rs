@@ -18,7 +18,9 @@ use crate::text::{TECHNICAL_PARAMS, canonical_params};
 use crate::util::{complete_demand, lossless, param_text, pipe_ref};
 use neatwork_nw5::model::DEFAULTS;
 use neatwork_nw5::read::{Read, fields, g15, num};
-use neatwork_nw5::{Arc, ArcState, Client, Error, Network, Node, NodeStatus, Pipe, Result, Terminal};
+use neatwork_nw5::{
+    Arc, ArcState, Client, Error, Network, Node, NodeStatus, Pipe, Result, Terminal,
+};
 
 /// Version tag of the format.
 pub const NW_JSON_SCHEMA: &str = "NW-json-v1";
@@ -26,23 +28,53 @@ pub const NW_JSON_SCHEMA: &str = "NW-json-v1";
 /// Design result sections stored as MATLAB tables: `(header, key, columns)`.
 /// `!Costs` (`name,value` rows) is the `reinfcost` struct.
 const RESULT_TABLES: &[(&str, &str, &[&str])] = &[
-    ("!Hydraulics", "TAH", &["pred", "succ", "equivResist", "designFlow", "pathLoss", "margin"]),
-    ("!ComplementTA", "TCP", &["pred", "succ", "nature", "diam1", "diam2"]),
+    (
+        "!Hydraulics",
+        "TAH",
+        &[
+            "pred",
+            "succ",
+            "equivResist",
+            "designFlow",
+            "pathLoss",
+            "margin",
+        ],
+    ),
+    (
+        "!ComplementTA",
+        "TCP",
+        &["pred", "succ", "nature", "diam1", "diam2"],
+    ),
     (
         "!ConstraintSatisfaction",
         "TS",
-        &["noeud", "constraint_type", "head_required", "head_available", "head_margin", "head_deficit"],
+        &[
+            "noeud",
+            "constraint_type",
+            "head_required",
+            "head_available",
+            "head_margin",
+            "head_deficit",
+        ],
     ),
 ];
 
 /// The rows of a section can be stored as a table of `columns` without
 /// loss: canonical header, exact field count, no spaces around fields.
-fn as_table(header: &str, lines: &[String], expected: &str, columns: usize) -> Option<Vec<Vec<String>>> {
+fn as_table(
+    header: &str,
+    lines: &[String],
+    expected: &str,
+    columns: usize,
+) -> Option<Vec<Vec<String>>> {
     if header != expected {
         return None;
     }
     let rows: Vec<Vec<String>> = lines.iter().map(|l| fields(l)).collect();
-    let exact = rows.iter().zip(lines).all(|(r, l)| r.len() == columns && r.join(",") == *l);
+    let exact = rows
+        .iter()
+        .zip(lines)
+        .all(|(r, l)| r.len() == columns && r.join(",") == *l);
     exact.then_some(rows)
 }
 
@@ -90,7 +122,13 @@ pub fn write_nw_json(net: &Network) -> String {
     let tb = net
         .terminals
         .iter()
-        .map(|t| obj(vec![("borne", s(&t.id)), ("pressure", n(t.pressure)), ("N", s("N"))]))
+        .map(|t| {
+            obj(vec![
+                ("borne", s(&t.id)),
+                ("pressure", n(t.pressure)),
+                ("N", s("N")),
+            ])
+        })
         .collect();
     let tc = net
         .clients
@@ -120,11 +158,21 @@ pub fn write_nw_json(net: &Network) -> String {
             ])
         })
         .collect();
-    let to = net.orifices.iter().map(|d| obj(vec![("in_diam", n(*d))])).collect();
+    let to = net
+        .orifices
+        .iter()
+        .map(|d| obj(vec![("in_diam", n(*d))]))
+        .collect();
     let tfact = net
         .loadflow
         .iter()
-        .map(|(succ, q, m)| obj(vec![("succ", s(succ)), ("designFlow", n(*q)), ("margin", n(*m))]))
+        .map(|(succ, q, m)| {
+            obj(vec![
+                ("succ", s(succ)),
+                ("designFlow", n(*q)),
+                ("margin", n(*m)),
+            ])
+        })
         .collect();
 
     // design result sections, others go to meta
@@ -140,13 +188,24 @@ pub fn write_nw_json(net: &Network) -> String {
         {
             let rows = rows
                 .iter()
-                .map(|r| Json::Object(cols.iter().zip(r).map(|(c, v)| (c.to_string(), lossless(v))).collect()))
+                .map(|r| {
+                    Json::Object(
+                        cols.iter()
+                            .zip(r)
+                            .map(|(c, v)| (c.to_string(), lossless(v)))
+                            .collect(),
+                    )
+                })
                 .collect();
             results.push((key, Json::Array(rows)));
         } else if let Some(rows) = as_table(header, lines, "!Costs", 2)
             && reinfcost.is_none()
         {
-            reinfcost = Some(Json::Object(rows.iter().map(|r| (r[0].clone(), lossless(&r[1]))).collect()));
+            reinfcost = Some(Json::Object(
+                rows.iter()
+                    .map(|r| (r[0].clone(), lossless(&r[1])))
+                    .collect(),
+            ));
         } else {
             extra.push(obj(vec![
                 ("header", s(header)),
@@ -199,7 +258,10 @@ pub fn write_nw_json(net: &Network) -> String {
         "meta",
         obj(vec![
             ("name", s(&net.name)),
-            ("comments", Json::Array(net.comments.iter().map(|c| s(c)).collect())),
+            (
+                "comments",
+                Json::Array(net.comments.iter().map(|c| s(c)).collect()),
+            ),
             (
                 "loadfactor",
                 Json::Array(
@@ -229,7 +291,8 @@ fn numcol(row: &Json, keys: &[&str]) -> Option<f64> {
 }
 
 fn need(row: &Json, keys: &[&str], table: &str) -> Result<f64> {
-    numcol(row, keys).ok_or_else(|| Error::Format(format!("{table}: missing or invalid column {}", keys[0])))
+    numcol(row, keys)
+        .ok_or_else(|| Error::Format(format!("{table}: missing or invalid column {}", keys[0])))
 }
 
 fn needtext(row: &Json, keys: &[&str], table: &str) -> Result<String> {
@@ -246,11 +309,15 @@ fn needtext(row: &Json, keys: &[&str], table: &str) -> Result<String> {
 pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
     let j = Json::parse(text)?;
     if !matches!(j, Json::Object(_)) {
-        return Err(Error::Format("NW-json: the top level must be an object".into()));
+        return Err(Error::Format(
+            "NW-json: the top level must be an object".into(),
+        ));
     }
     let mut warnings = Vec::new();
     match j.get("schema").and_then(Json::text) {
-        Some(t) if t != NW_JSON_SCHEMA => warnings.push(format!("NW-json: unknown schema `{t}`, read as {NW_JSON_SCHEMA}")),
+        Some(t) if t != NW_JSON_SCHEMA => warnings.push(format!(
+            "NW-json: unknown schema `{t}`, read as {NW_JSON_SCHEMA}"
+        )),
         _ => {}
     }
     let table = |keys: &[&str]| j.first(keys).map(Json::rows).unwrap_or_default();
@@ -268,9 +335,15 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
     let mut push_param = |k: &str, v: &Json| {
         let value = param_text(v).or_else(|| {
             let canonical = neatwork_nw5::Params::canonical(k);
-            DEFAULTS.iter().find(|(d, _)| *d == canonical).map(|(_, x)| g15(*x))
+            DEFAULTS
+                .iter()
+                .find(|(d, _)| *d == canonical)
+                .map(|(_, x)| g15(*x))
         });
-        net.params.set(neatwork_nw5::Params::canonical(k), &value.unwrap_or_else(|| "NaN".into()));
+        net.params.set(
+            neatwork_nw5::Params::canonical(k),
+            &value.unwrap_or_else(|| "NaN".into()),
+        );
     };
     let tpar = table(&["TPar"]);
     if tpar.is_empty() {
@@ -283,7 +356,10 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
         }
     } else {
         for row in tpar {
-            if let (Some(k), Some(v)) = (col(row, &["name", "property"]), row.get("value").or(row.get("valeur"))) {
+            if let (Some(k), Some(v)) = (
+                col(row, &["name", "property"]),
+                row.get("value").or(row.get("valeur")),
+            ) {
                 push_param(&k, v);
             }
         }
@@ -349,7 +425,8 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
     }
     for row in table(&["TO", "TOn"]) {
         let d = match row {
-            Json::Object(m) => numcol(row, &["in_diam", "Diameter"]).or_else(|| m.first().and_then(|(_, v)| v.as_f64())),
+            Json::Object(m) => numcol(row, &["in_diam", "Diameter"])
+                .or_else(|| m.first().and_then(|(_, v)| v.as_f64())),
             other => other.as_f64(),
         };
         if let Some(d) = d {
@@ -372,7 +449,12 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
         if !rows.is_empty() {
             let lines = rows
                 .iter()
-                .map(|r| cols.iter().map(|c| col(r, &[c]).unwrap_or_default()).collect::<Vec<_>>().join(","))
+                .map(|r| {
+                    cols.iter()
+                        .map(|c| col(r, &[c]).unwrap_or_default())
+                        .collect::<Vec<_>>()
+                        .join(",")
+                })
                 .collect();
             net.extra_sections.push((header.to_string(), lines));
         }
@@ -380,16 +462,22 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
     if let Some(Json::Object(m)) = j.get("reinfcost")
         && !m.is_empty()
     {
-        let lines = m.iter().map(|(k, v)| format!("{k},{}", v.text().unwrap_or_else(|| "NaN".into()))).collect();
+        let lines = m
+            .iter()
+            .map(|(k, v)| format!("{k},{}", v.text().unwrap_or_else(|| "NaN".into())))
+            .collect();
         net.extra_sections.push(("!Costs".into(), lines));
     }
     if let Some(meta) = meta {
         let strings = |v: &Json| v.rows().iter().filter_map(|x| x.text()).collect::<Vec<_>>();
         if let Some(Json::Array(c)) = meta.get("comments") {
-            net.comments = c.iter().filter_map(|x| match x {
-                Json::String(t) => Some(t.clone()),
-                _ => None,
-            }).collect();
+            net.comments = c
+                .iter()
+                .filter_map(|x| match x {
+                    Json::String(t) => Some(t.clone()),
+                    _ => None,
+                })
+                .collect();
         }
         if let Some(Json::Array(rows)) = meta.get("loadfactor") {
             net.loadfactor_raw.extend(rows.iter().map(strings));
@@ -398,10 +486,13 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
             for sec in sections {
                 let header = col(sec, &["header"]).unwrap_or_default();
                 let lines = match sec.get("lines") {
-                    Some(Json::Array(l)) => l.iter().filter_map(|x| match x {
-                        Json::String(t) => Some(t.clone()),
-                        _ => None,
-                    }).collect(),
+                    Some(Json::Array(l)) => l
+                        .iter()
+                        .filter_map(|x| match x {
+                            Json::String(t) => Some(t.clone()),
+                            _ => None,
+                        })
+                        .collect(),
                     _ => Vec::new(),
                 };
                 net.extra_sections.push((header, lines));
@@ -410,5 +501,8 @@ pub fn read_nw_json(name: &str, text: &str) -> Result<Read> {
     }
     warnings.extend(complete_demand(&mut net));
     warnings.extend(net.apply_client_data());
-    Ok(Read { network: net, warnings })
+    Ok(Read {
+        network: net,
+        warnings,
+    })
 }

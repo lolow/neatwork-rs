@@ -1,5 +1,5 @@
 bin.name = "neatwork"
-args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "tapbytap"]
+args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "tapbytap", "--engine", "nw4"]
 status.code = 0
 fs.sandbox = true
 fs.base = "simulate-toy-tapbytap.in"

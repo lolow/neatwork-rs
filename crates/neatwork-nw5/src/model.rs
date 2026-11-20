@@ -229,7 +229,11 @@ impl Params {
 
     /// Set a value (replaces the existing entry or appends).
     pub fn set(&mut self, name: &str, value: &str) {
-        match self.entries.iter_mut().find(|(k, _)| Params::canonical(k) == name) {
+        match self
+            .entries
+            .iter_mut()
+            .find(|(k, _)| Params::canonical(k) == name)
+        {
             Some(e) => {
                 e.0 = name.to_string();
                 e.1 = value.to_string();
@@ -301,9 +305,10 @@ impl Network {
             self.params.set("targetflow", &fmt_num(q));
         } else {
             self.params.set("uniform_dem", "0");
-            let shared = self.terminals.iter().any(|t| {
-                self.clients.iter().filter(|c| c.terminal == t.id).count() > 1
-            });
+            let shared = self
+                .terminals
+                .iter()
+                .any(|t| self.clients.iter().filter(|c| c.terminal == t.id).count() > 1);
             if shared && self.params.get("bounded_flow") == 0.0 {
                 warnings.push(
                     "NW5:BoundedFlowRequired: diverse demand at a shared terminal needs bounded flow; bounded_flow set to 1".into(),

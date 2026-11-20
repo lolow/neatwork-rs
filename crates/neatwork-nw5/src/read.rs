@@ -72,7 +72,10 @@ pub fn sections(text: &str) -> (Vec<Section>, Vec<String>) {
     for s in out {
         if seen.contains(&s.name) {
             if !s.lines.is_empty() {
-                warnings.push(format!("section !{} appears twice; the first block is used", s.name));
+                warnings.push(format!(
+                    "section !{} appears twice; the first block is used",
+                    s.name
+                ));
             }
             continue;
         }
@@ -131,7 +134,9 @@ pub fn read_diameters_db(text: &str) -> Result<Vec<Pipe>> {
     let rows: Vec<Vec<String>> = text
         .lines()
         .map(|l| l.trim_end_matches('\r'))
-        .filter(|l| !l.trim().is_empty() && !l.trim().starts_with('!') && !l.trim().starts_with('#'))
+        .filter(|l| {
+            !l.trim().is_empty() && !l.trim().starts_with('!') && !l.trim().starts_with('#')
+        })
         .map(fields)
         .collect();
     diameters_from_rows(&rows, false)
@@ -170,7 +175,11 @@ fn diameters_from_rows(rows: &[Vec<String>], _dsg: bool) -> Result<Vec<Pipe>> {
         }
     }
     if !without_id.is_empty() {
-        without_id.sort_by(|a, b| a.diameter.partial_cmp(&b.diameter).unwrap_or(std::cmp::Ordering::Equal));
+        without_id.sort_by(|a, b| {
+            a.diameter
+                .partial_cmp(&b.diameter)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         for (k, p) in without_id.iter_mut().enumerate() {
             p.id = format!("D{:03}", k + 1);
         }
@@ -236,7 +245,11 @@ fn complete_demand(net: &mut Network, has_clients: bool, has_terminals: bool) ->
         let p = net.params.get("opentaps");
         let q = net.params.get("targetflow");
         let mut clients = Vec::new();
-        for n in net.nodes.iter().filter(|n| n.status == NodeStatus::Terminal) {
+        for n in net
+            .nodes
+            .iter()
+            .filter(|n| n.status == NodeStatus::Terminal)
+        {
             let k = n.taps.unwrap_or(0.0).max(0.0) as usize;
             for i in 1..=k {
                 clients.push(Client {
@@ -249,7 +262,10 @@ fn complete_demand(net: &mut Network, has_clients: bool, has_terminals: bool) ->
         }
         // MATLAB order: (borne, client), plain string order
         clients.sort_by(|a, b| (&a.terminal, &a.id).cmp(&(&b.terminal, &b.id)));
-        warnings.push(format!("no !Clients section: {} clients generated from the tap counts", clients.len()));
+        warnings.push(format!(
+            "no !Clients section: {} clients generated from the tap counts",
+            clients.len()
+        ));
         net.clients = clients;
     }
     if !has_terminals {
@@ -263,7 +279,10 @@ fn complete_demand(net: &mut Network, has_clients: bool, has_terminals: bool) ->
                 pressure: p,
             })
             .collect();
-        warnings.push(format!("no !Borne section: {} bornes generated", net.terminals.len()));
+        warnings.push(format!(
+            "no !Borne section: {} bornes generated",
+            net.terminals.len()
+        ));
     }
     warnings
 }
@@ -328,7 +347,13 @@ pub fn read_tpo(name: &str, text: &str) -> Result<Read> {
                 let rows: Vec<Vec<String>> = s.lines.iter().map(|l| fields(l)).collect();
                 net.pipes = diameters_from_rows(&rows, false)?;
             }
-            "orifices" => net.orifices = s.lines.iter().filter_map(|l| fields(l).first().and_then(|f| num(f))).collect(),
+            "orifices" => {
+                net.orifices = s
+                    .lines
+                    .iter()
+                    .filter_map(|l| fields(l).first().and_then(|f| num(f)))
+                    .collect()
+            }
             "clients" => {
                 net.clients = read_clients(s)?;
                 has_clients = true;
@@ -343,7 +368,10 @@ pub fn read_tpo(name: &str, text: &str) -> Result<Read> {
     }
     warnings.extend(complete_demand(&mut net, has_clients, has_terminals));
     warnings.extend(net.apply_client_data());
-    Ok(Read { network: net, warnings })
+    Ok(Read {
+        network: net,
+        warnings,
+    })
 }
 
 /// Read a `.dsg` file (NW4 or NW5).
@@ -402,7 +430,13 @@ pub fn read_dsg(name: &str, text: &str) -> Result<Read> {
                 let rows: Vec<Vec<String>> = s.lines.iter().map(|l| fields(l)).collect();
                 net.pipes = diameters_from_rows(&rows, true)?;
             }
-            "orifices" => net.orifices = s.lines.iter().filter_map(|l| fields(l).first().and_then(|f| num(f))).collect(),
+            "orifices" => {
+                net.orifices = s
+                    .lines
+                    .iter()
+                    .filter_map(|l| fields(l).first().and_then(|f| num(f)))
+                    .collect()
+            }
             "clients" => {
                 net.clients = read_clients(s)?;
                 has_clients = true;
@@ -435,18 +469,32 @@ pub fn read_dsg(name: &str, text: &str) -> Result<Read> {
     }
     warnings.extend(complete_demand(&mut net, has_clients, has_terminals));
     warnings.extend(net.apply_client_data());
-    Ok(Read { network: net, warnings })
+    Ok(Read {
+        network: net,
+        warnings,
+    })
 }
 
 /// Read a file by its extension (`.tpo` or `.dsg`).
 pub fn read_file(path: &std::path::Path) -> Result<Read> {
     let bytes = std::fs::read(path).map_err(|e| Error::Io(format!("{}: {e}", path.display())))?;
     let text = String::from_utf8_lossy(&bytes);
-    let name = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
-    match path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).as_deref() {
+    let name = path
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_default();
+    match path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .as_deref()
+    {
         Some("tpo") => read_tpo(&name, &text),
         Some("dsg") => read_dsg(&name, &text),
-        _ => Err(Error::Format(format!("{}: unknown file type (expected .tpo or .dsg)", path.display()))),
+        _ => Err(Error::Format(format!(
+            "{}: unknown file type (expected .tpo or .dsg)",
+            path.display()
+        ))),
     }
 }
 
@@ -490,7 +538,10 @@ mod tests {
     #[test]
     fn section_names() {
         assert_eq!(canonical_section("!Nodes,,"), "nodes");
-        assert_eq!(canonical_section("!Default Properties"), "default properties");
+        assert_eq!(
+            canonical_section("!Default Properties"),
+            "default properties"
+        );
         assert_eq!(canonical_section("!Bornes"), "borne");
         assert_eq!(canonical_section("!load_factor"), "load factor");
     }

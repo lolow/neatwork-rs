@@ -11,7 +11,9 @@
 use crate::fmt::fmt_g;
 use crate::sha1::sha1_hex;
 use neatwork_nw5::read::g15;
-use neatwork_nw5::{Arc, ArcState, Client, Error, Network, Node, NodeStatus, Pipe, Result, Terminal};
+use neatwork_nw5::{
+    Arc, ArcState, Client, Error, Network, Node, NodeStatus, Pipe, Result, Terminal,
+};
 
 // ---------------------------------------------------------------- export
 
@@ -26,7 +28,11 @@ pub struct InpExport {
 
 /// An EPANET ID has 1 to 31 characters, no white space, no `;`, no `"`.
 fn valid_id(id: &str) -> bool {
-    !id.is_empty() && id.chars().count() <= 31 && !id.chars().any(|c| c.is_whitespace() || c == ';' || c == '"')
+    !id.is_empty()
+        && id.chars().count() <= 31
+        && !id
+            .chars()
+            .any(|c| c.is_whitespace() || c == ';' || c == '"')
 }
 
 /// Hazen-Williams coefficient equivalent to `bescal` (exact for the H-W
@@ -55,7 +61,13 @@ struct Segment<'a> {
     open: bool,
 }
 
-fn segment<'a>((length, pipe): (f64, &'a Pipe), id: String, from: &str, to: &str, open: bool) -> Segment<'a> {
+fn segment<'a>(
+    (length, pipe): (f64, &'a Pipe),
+    id: String,
+    from: &str,
+    to: &str,
+    open: bool,
+) -> Segment<'a> {
     Segment {
         id,
         from: from.to_string(),
@@ -94,7 +106,10 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
     let mut segments: Vec<Segment> = Vec::new();
     for (k, a) in net.arcs.iter().enumerate() {
         let mut segs = Vec::new();
-        for (part, (len, id)) in [(a.length1, &a.pipe1), (a.length2, &a.pipe2)].into_iter().enumerate() {
+        for (part, (len, id)) in [(a.length1, &a.pipe1), (a.length2, &a.pipe2)]
+            .into_iter()
+            .enumerate()
+        {
             if len > 0.0 {
                 let id = id.as_deref().unwrap_or("");
                 let pipe = net.pipe(id).ok_or_else(|| {
@@ -109,17 +124,28 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
             }
         }
         if segs.is_empty() {
-            warnings.push(format!("arc {} -> {} has no pipe and is not exported", a.from, a.to));
+            warnings.push(format!(
+                "arc {} -> {} has no pipe and is not exported",
+                a.from, a.to
+            ));
             continue;
         }
-        let parallel = net.arcs.iter().enumerate().any(|(j, b)| j != k && b.from == a.from && b.to == a.to);
+        let parallel = net
+            .arcs
+            .iter()
+            .enumerate()
+            .any(|(j, b)| j != k && b.from == a.from && b.to == a.to);
         let mut base = format!("{}-{}", a.from, a.to);
         if parallel && a.state == ArcState::Reinforcement {
             base.push_str("#R");
         }
         let suffix = if segs.len() == 2 { "#1" } else { "" };
         if !valid_id(&format!("{base}{suffix}")) || pipe_ids.contains(&base) {
-            base = if a.id.is_empty() { format!("A{}", k + 1) } else { a.id.clone() };
+            base = if a.id.is_empty() {
+                format!("A{}", k + 1)
+            } else {
+                a.id.clone()
+            };
         }
         pipe_ids.push(base.clone());
         match segs.as_slice() {
@@ -136,7 +162,12 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
                     (Some(x), Some(y)) => f(x) + (f(y) - f(x)) * t,
                     _ => 0.0,
                 };
-                splits.push((mid.clone(), lerp(|n| n.elevation), lerp(|n| n.x), lerp(|n| n.y)));
+                splits.push((
+                    mid.clone(),
+                    lerp(|n| n.elevation),
+                    lerp(|n| n.x),
+                    lerp(|n| n.y),
+                ));
                 segments.push(segment(*s1, format!("{base}#1"), &a.from, &mid, a.open));
                 segments.push(segment(*s2, format!("{base}#2"), &mid, &a.to, a.open));
             }
@@ -149,7 +180,11 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
     let (orifcoef, faucetcoef) = (p.get("orifcoef"), p.get("faucetcoef"));
     let mut emitters: Vec<(String, f64)> = Vec::new();
     if !bounded {
-        for n in net.nodes.iter().filter(|n| n.status == NodeStatus::Terminal) {
+        for n in net
+            .nodes
+            .iter()
+            .filter(|n| n.status == NodeStatus::Terminal)
+        {
             let count = net.clients.iter().filter(|c| c.terminal == n.id).count();
             if count == 0 {
                 continue;
@@ -168,7 +203,10 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
     let required = if net.terminals.is_empty() {
         p.get("pressure")
     } else {
-        net.terminals.iter().map(|t| t.pressure).fold(f64::NEG_INFINITY, f64::max)
+        net.terminals
+            .iter()
+            .map(|t| t.pressure)
+            .fold(f64::NEG_INFINITY, f64::max)
     };
     if bounded && net.terminals.iter().any(|t| t.pressure != required) {
         warnings.push(format!(
@@ -206,11 +244,29 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
     }
     line(&[]);
     line(&["[PIPES]"]);
-    line(&[";ID", "Node1", "Node2", "Length", "Diameter", "Roughness", "MinorLoss", "Status"]);
+    line(&[
+        ";ID",
+        "Node1",
+        "Node2",
+        "Length",
+        "Diameter",
+        "Roughness",
+        "MinorLoss",
+        "Status",
+    ]);
     let c_text = g15(c);
     for s in &segments {
         let status = if s.open { "Open" } else { "Closed" };
-        line(&[&s.id, &s.from, &s.to, &g15(s.length), &g15(s.pipe.diameter * 1000.0), &c_text, "0", status]);
+        line(&[
+            &s.id,
+            &s.from,
+            &s.to,
+            &g15(s.length),
+            &g15(s.pipe.diameter * 1000.0),
+            &c_text,
+            "0",
+            status,
+        ]);
     }
     line(&[]);
     if !emitters.is_empty() {
@@ -266,7 +322,10 @@ pub fn write_inp(net: &Network) -> Result<InpExport> {
     }
     line(&[]);
     line(&["[END]"]);
-    Ok(InpExport { text: out, warnings })
+    Ok(InpExport {
+        text: out,
+        warnings,
+    })
 }
 
 // ---------------------------------------------------------------- import
@@ -366,9 +425,15 @@ fn parse_sections(text: &str) -> Vec<InpSection> {
     let mut sections: Vec<InpSection> = Vec::new();
     let mut current: Option<usize> = None;
     for (k, original) in text.lines().enumerate() {
-        let raw = original.trim_start_matches('\u{feff}').trim_end_matches('\r');
+        let raw = original
+            .trim_start_matches('\u{feff}')
+            .trim_end_matches('\r');
         let data = raw.split(';').next().unwrap_or("").trim();
-        if data.starts_with('[') && data.ends_with(']') && data.len() > 2 && !data[1..data.len() - 1].contains(']') {
+        if data.starts_with('[')
+            && data.ends_with(']')
+            && data.len() > 2
+            && !data[1..data.len() - 1].contains(']')
+        {
             let name = data[1..data.len() - 1].trim().to_uppercase();
             if name == "END" {
                 break;
@@ -445,7 +510,12 @@ fn flow_to_lps(units: &str) -> Option<f64> {
 /// Order-independent catalogue ID of an EPANET diameter:
 /// `EPD_` + SHA-1 of `"%.12g(diameter_m)|%.12g(roughness)|HEADLOSS"`.
 pub fn diameter_catalog_id(diameter_m: f64, roughness: f64, headloss: &str) -> String {
-    let identity = format!("{}|{}|{}", fmt_g(diameter_m, 12), fmt_g(roughness, 12), headloss.to_uppercase());
+    let identity = format!(
+        "{}|{}|{}",
+        fmt_g(diameter_m, 12),
+        fmt_g(roughness, 12),
+        headloss.to_uppercase()
+    );
     format!("EPD_{}", sha1_hex(identity.as_bytes())[..10].to_uppercase())
 }
 
@@ -491,25 +561,42 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
     let mut issues = Issues(Vec::new());
 
     // options
-    let mut options: Vec<(String, String)> = vec![("UNITS".into(), "GPM".into()), ("HEADLOSS".into(), "H-W".into())];
-    for l in sec("OPTIONS").map(|s| s.lines.as_slice()).unwrap_or_default() {
+    let mut options: Vec<(String, String)> = vec![
+        ("UNITS".into(), "GPM".into()),
+        ("HEADLOSS".into(), "H-W".into()),
+    ];
+    for l in sec("OPTIONS")
+        .map(|s| s.lines.as_slice())
+        .unwrap_or_default()
+    {
         let upper: Vec<String> = l.tokens.iter().map(|t| t.to_uppercase()).collect();
         let (key, skip) = OPTION_KEYS
             .iter()
             .find_map(|k| {
                 let kt: Vec<&str> = k.split(' ').collect();
-                (upper.len() >= kt.len() && upper[..kt.len()] == kt[..]).then(|| (k.to_string(), kt.len()))
+                (upper.len() >= kt.len() && upper[..kt.len()] == kt[..])
+                    .then(|| (k.to_string(), kt.len()))
             })
             .unwrap_or_else(|| (upper.first().cloned().unwrap_or_default(), 1));
-        let value = l.tokens.get(skip..).map(|v| v.join(" ")).unwrap_or_default();
+        let value = l
+            .tokens
+            .get(skip..)
+            .map(|v| v.join(" "))
+            .unwrap_or_default();
         match options.iter_mut().find(|(k, _)| *k == key) {
             Some(e) => e.1 = value,
             None => options.push((key, value)),
         }
     }
-    let option = |k: &str| options.iter().find(|(o, _)| o == k).map(|(_, v)| v.trim().to_string());
+    let option = |k: &str| {
+        options
+            .iter()
+            .find(|(o, _)| o == k)
+            .map(|(_, v)| v.trim().to_string())
+    };
     let units = option("UNITS").unwrap_or_default().to_uppercase();
-    let flow = flow_to_lps(&units).ok_or_else(|| Error::Format(format!("Unsupported EPANET flow units: {units}")))?;
+    let flow = flow_to_lps(&units)
+        .ok_or_else(|| Error::Format(format!("Unsupported EPANET flow units: {units}")))?;
     let us = matches!(units.as_str(), "CFS" | "GPM" | "MGD" | "IMGD" | "AFD");
     let length_m = |v: f64| if us { v * 0.3048 } else { v };
     let headloss = option("HEADLOSS").unwrap_or_default().to_uppercase();
@@ -540,7 +627,11 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
     }
 
     let mut net = Network {
-        name: if opts.name.is_empty() { "EPANET import prototype".into() } else { opts.name.clone() },
+        name: if opts.name.is_empty() {
+            "EPANET import prototype".into()
+        } else {
+            opts.name.clone()
+        },
         comments: title,
         ..Network::default()
     };
@@ -555,7 +646,9 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
             );
             continue;
         }
-        let Some(elevation) = issues.float(&l.tokens[1], "junction elevation", "JUNCTIONS", l.number) else {
+        let Some(elevation) =
+            issues.float(&l.tokens[1], "junction elevation", "JUNCTIONS", l.number)
+        else {
             continue;
         };
         let demand = match l.tokens.get(2) {
@@ -586,7 +679,8 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
         }
     }
     for l in lines("RESERVOIRS").iter().filter(|l| l.tokens.len() >= 2) {
-        let Some(head) = issues.float(&l.tokens[1], "reservoir head", "RESERVOIRS", l.number) else {
+        let Some(head) = issues.float(&l.tokens[1], "reservoir head", "RESERVOIRS", l.number)
+        else {
             continue;
         };
         let (x, y) = coordinate(&l.tokens[0]);
@@ -659,7 +753,10 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
             },
             None => 0.0,
         };
-        let status = l.tokens.get(7).map_or("OPEN".to_string(), |s| s.to_uppercase());
+        let status = l
+            .tokens
+            .get(7)
+            .map_or("OPEN".to_string(), |s| s.to_uppercase());
         if !matches!(status.as_str(), "OPEN" | "CLOSED" | "CV") {
             issues.add(
                 "UNKNOWN_PIPE_STATUS",
@@ -680,7 +777,11 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
         if headloss == "H-W" && !roughness_values.contains(&roughness) {
             roughness_values.push(roughness);
         }
-        let diameter_m = if us { diameter * 0.0254 } else { diameter / 1000.0 };
+        let diameter_m = if us {
+            diameter * 0.0254
+        } else {
+            diameter / 1000.0
+        };
         let catalogue_id = diameter_catalog_id(diameter_m, roughness, &headloss);
         if net.pipe(&catalogue_id).is_none() {
             net.pipes.push(Pipe {
@@ -719,8 +820,14 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
     }
 
     // demand model
-    let demand_model = option("DEMAND MODEL").unwrap_or_else(|| "DDA".into()).to_uppercase();
-    let option_num = |k: &str, default: f64| option(k).and_then(|v| v.parse::<f64>().ok()).unwrap_or(default);
+    let demand_model = option("DEMAND MODEL")
+        .unwrap_or_else(|| "DDA".into())
+        .to_uppercase();
+    let option_num = |k: &str, default: f64| {
+        option(k)
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(default)
+    };
     match demand_model.as_str() {
         "PDA" | "PDD" => {
             if option_num("MINIMUM PRESSURE", 0.0).abs() > 1e-12 {
@@ -779,7 +886,10 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
     if !demands.is_empty() && opts.demand_policy == DemandPolicy::PreserveUnresolved {
         issues.add(
             "INTERMITTENT_PROBABILITY_UNRESOLVED",
-            format!("{} demands preserved, but EPANET has no client opening probability.", demands.len()),
+            format!(
+                "{} demands preserved, but EPANET has no client opening probability.",
+                demands.len()
+            ),
             Some("DEMANDS"),
             None,
         );
@@ -890,12 +1000,22 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
         }
     }
     let mut preserved = Vec::new();
-    for s in sections.iter().filter(|s| !TYPED_SECTIONS.contains(&s.name.as_str())) {
-        let active = s.raw.iter().filter(|l| !l.trim().is_empty() && !l.trim_start().starts_with(';')).count();
+    for s in sections
+        .iter()
+        .filter(|s| !TYPED_SECTIONS.contains(&s.name.as_str()))
+    {
+        let active = s
+            .raw
+            .iter()
+            .filter(|l| !l.trim().is_empty() && !l.trim_start().starts_with(';'))
+            .count();
         if matches!(s.name.as_str(), "TANKS" | "PUMPS" | "VALVES") && active > 0 {
             issues.add(
                 &format!("UNSUPPORTED_{}", s.name),
-                format!("[{}] has {active} active record(s) not representable by NeatWork.", s.name),
+                format!(
+                    "[{}] has {active} active record(s) not representable by NeatWork.",
+                    s.name
+                ),
                 Some(&s.name),
                 None,
             );
@@ -904,11 +1024,16 @@ pub fn read_inp(text: &str, opts: &InpImportOptions) -> Result<InpImport> {
     }
 
     // H-W parameters
-    if opts.enable_hw_param_mapping && headloss == "H-W" && roughness_values.len() == 1 && !minor_loss {
+    if opts.enable_hw_param_mapping
+        && headloss == "H-W"
+        && roughness_values.len() == 1
+        && !minor_loss
+    {
         let c = roughness_values[0];
         net.params.set("lambda", "1.852");
         net.params.set("nu", "4.871");
-        net.params.set("bescal", &format!("{}", 10.667 * c.powf(-1.852)));
+        net.params
+            .set("bescal", &format!("{}", 10.667 * c.powf(-1.852)));
     }
     let warnings = net.apply_client_data();
     let issues = issues.0;

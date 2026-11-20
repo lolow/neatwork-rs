@@ -1,5 +1,5 @@
 bin.name = "neatwork"
-args = ["simulate", "El_Bihajua.dsg", "-o", "out.sim", "--type", "handmade", "--open", "34,40,45,50,55"]
+args = ["simulate", "El_Bihajua.dsg", "-o", "out.sim", "--type", "handmade", "--open", "34,40,45,50,55", "--engine", "nw4"]
 status.code = 0
 fs.sandbox = true
 fs.base = "simulate-elbihajua-handmade.in"

@@ -23,7 +23,12 @@ pub enum Json {
 
 /// Object from `(key, value)` pairs.
 pub fn obj(members: Vec<(&str, Json)>) -> Json {
-    Json::Object(members.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
+    Json::Object(
+        members
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect(),
+    )
 }
 
 /// String value.
@@ -33,7 +38,11 @@ pub fn s(text: &str) -> Json {
 
 /// Number value. Non-finite numbers become `null` (JSON has no `Inf`).
 pub fn n(x: f64) -> Json {
-    if x.is_finite() { Json::Number(x) } else { Json::Null }
+    if x.is_finite() {
+        Json::Number(x)
+    } else {
+        Json::Null
+    }
 }
 
 /// Nesting depth accepted by the parser.
@@ -43,7 +52,10 @@ impl Json {
     /// Parse a JSON text (a UTF-8 BOM is accepted).
     pub fn parse(text: &str) -> Result<Json> {
         let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-        let mut p = Parser { b: text.as_bytes(), i: 0 };
+        let mut p = Parser {
+            b: text.as_bytes(),
+            i: 0,
+        };
         let v = p.value(0)?;
         p.ws();
         if p.i < p.b.len() {
@@ -62,7 +74,8 @@ impl Json {
 
     /// First present, non-null member among `keys`.
     pub fn first(&self, keys: &[&str]) -> Option<&Json> {
-        keys.iter().find_map(|k| self.get(k).filter(|v| !matches!(v, Json::Null)))
+        keys.iter()
+            .find_map(|k| self.get(k).filter(|v| !matches!(v, Json::Null)))
     }
 
     /// Number value (a numeric string is accepted).
@@ -260,7 +273,11 @@ impl Parser<'_> {
             Some(_) if self.eat("false") => Ok(Json::Bool(false)),
             Some(_) => {
                 let start = self.i;
-                while self.b.get(self.i).is_some_and(|c| matches!(c, b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')) {
+                while self
+                    .b
+                    .get(self.i)
+                    .is_some_and(|c| matches!(c, b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9'))
+                {
                     self.i += 1;
                 }
                 std::str::from_utf8(&self.b[start..self.i])
@@ -295,7 +312,11 @@ impl Parser<'_> {
                 }
                 Some(b'\\') => {
                     self.i += 1;
-                    let c = self.b.get(self.i).copied().ok_or_else(|| self.err("unterminated string"))?;
+                    let c = self
+                        .b
+                        .get(self.i)
+                        .copied()
+                        .ok_or_else(|| self.err("unterminated string"))?;
                     self.i += 1;
                     let ch = match c {
                         b'"' => '"',
@@ -336,7 +357,9 @@ mod tests {
 
     #[test]
     fn parse_and_print() -> Result<()> {
-        let v = Json::parse(" {\"a\": [1, -2.5e-3, true, null, \"x\\\"\\u00e9\\ud83d\\ude00\"], \"b\": {}} ")?;
+        let v = Json::parse(
+            " {\"a\": [1, -2.5e-3, true, null, \"x\\\"\\u00e9\\ud83d\\ude00\"], \"b\": {}} ",
+        )?;
         assert_eq!(v.get("a").map(Json::rows).map(|r| r.len()), Some(5));
         assert_eq!(
             v.pretty(),

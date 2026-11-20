@@ -3,7 +3,13 @@
 
 /// SHA-1 digest of `data` as 40 lower-case hexadecimal digits.
 pub fn sha1_hex(data: &[u8]) -> String {
-    let mut h: [u32; 5] = [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476, 0xC3D2_E1F0];
+    let mut h: [u32; 5] = [
+        0x6745_2301,
+        0xEFCD_AB89,
+        0x98BA_DCFE,
+        0x1032_5476,
+        0xC3D2_E1F0,
+    ];
     let mut msg = data.to_vec();
     let bit_len = (data.len() as u64).wrapping_mul(8);
     msg.push(0x80);
@@ -27,7 +33,12 @@ pub fn sha1_hex(data: &[u8]) -> String {
                 40..=59 => ((b & c) | (b & d) | (c & d), 0x8F1B_BCDC),
                 _ => (b ^ c ^ d, 0xCA62_C1D6),
             };
-            let t = a.rotate_left(5).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(*wi);
+            let t = a
+                .rotate_left(5)
+                .wrapping_add(f)
+                .wrapping_add(e)
+                .wrapping_add(k)
+                .wrapping_add(*wi);
             e = d;
             d = c;
             c = b.rotate_left(30);

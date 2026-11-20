@@ -2892,7 +2892,9 @@ dependencies = [
  "clap",
  "neatwork-core",
  "neatwork-nw5",
+ "neatwork-nw5-design",
  "neatwork-nw5-io",
+ "neatwork-nw5-sim",
 ]
 
 [[package]]

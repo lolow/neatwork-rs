@@ -23,7 +23,9 @@ use crate::sha1::sha1_hex;
 use crate::text::canonical_params;
 use crate::util::{complete_demand, lossless, param_text, pipe_ref};
 use neatwork_nw5::read::{Read, canonical_section, fields, g15, num};
-use neatwork_nw5::{Arc, ArcState, Client, Error, Network, Node, NodeStatus, Params, Pipe, Result, Terminal};
+use neatwork_nw5::{
+    Arc, ArcState, Client, Error, Network, Node, NodeStatus, Params, Pipe, Result, Terminal,
+};
 
 /// Stable client behaviour identifier of the application:
 /// `CB_` + the first 10 hexadecimal digits (upper case) of the SHA-1 of
@@ -101,7 +103,11 @@ pub fn write_domain_json(net: &Network) -> String {
             if !behaviors.iter().any(|(id, _, _)| *id == b) {
                 behaviors.push((b.clone(), c.probability, c.target_flow));
             }
-            obj(vec![("client", s(&c.id)), ("borne", s(&c.terminal)), ("behaviorId", s(&b))])
+            obj(vec![
+                ("client", s(&c.id)),
+                ("borne", s(&c.terminal)),
+                ("behaviorId", s(&b)),
+            ])
         })
         .collect();
     let behaviors = behaviors
@@ -120,7 +126,13 @@ pub fn write_domain_json(net: &Network) -> String {
     let bornes = net
         .terminals
         .iter()
-        .map(|t| obj(vec![("borne", s(&t.id)), ("pressure", n(t.pressure)), ("N", s("N"))]))
+        .map(|t| {
+            obj(vec![
+                ("borne", s(&t.id)),
+                ("pressure", n(t.pressure)),
+                ("N", s("N")),
+            ])
+        })
         .collect();
     let diameters = net
         .pipes
@@ -154,12 +166,21 @@ pub fn write_domain_json(net: &Network) -> String {
     let loadflow = net
         .loadflow
         .iter()
-        .map(|(succ, q, m)| obj(vec![("succ", s(succ)), ("designFlow", n(*q)), ("margin", n(*m))]))
+        .map(|(succ, q, m)| {
+            obj(vec![
+                ("succ", s(succ)),
+                ("designFlow", n(*q)),
+                ("margin", n(*m)),
+            ])
+        })
         .collect();
     let mut preserved = Vec::new();
     if !net.loadfactor_raw.is_empty() {
         let lines = net.loadfactor_raw.iter().map(|r| s(&r.join(","))).collect();
-        preserved.push(obj(vec![("header", s("!loadfactor")), ("lines", Json::Array(lines))]));
+        preserved.push(obj(vec![
+            ("header", s("!loadfactor")),
+            ("lines", Json::Array(lines)),
+        ]));
     }
     for (header, lines) in &net.extra_sections {
         preserved.push(obj(vec![
@@ -174,7 +195,10 @@ pub fn write_domain_json(net: &Network) -> String {
     obj(vec![
         ("name", s(&net.name)),
         ("sourceFormat", s(if design { "DSG" } else { "TPO" })),
-        ("comments", Json::Array(net.comments.iter().map(|c| s(c)).collect())),
+        (
+            "comments",
+            Json::Array(net.comments.iter().map(|c| s(c)).collect()),
+        ),
         ("params", Json::Object(params)),
         ("technicalParams", Json::Object(Vec::new())),
         ("designParams", Json::Object(Vec::new())),
@@ -199,7 +223,9 @@ pub fn write_domain_json(net: &Network) -> String {
 }
 
 fn text(row: &Json, keys: &[&str]) -> Option<String> {
-    row.first(keys).and_then(Json::text).filter(|t| !t.is_empty())
+    row.first(keys)
+        .and_then(Json::text)
+        .filter(|t| !t.is_empty())
 }
 
 fn number(row: &Json, keys: &[&str]) -> Option<f64> {
@@ -212,7 +238,12 @@ fn required<T>(v: Option<T>, entity: &str, id: &str, field: &str) -> Result<T> {
 
 fn read_nodes(rows: &[&Json], graph: bool, net: &mut Network) -> Result<()> {
     for row in rows {
-        let id = required(text(row, &["node_id", "nodeId", "noeud", "id"]), "Node", "", "identifier")?;
+        let id = required(
+            text(row, &["node_id", "nodeId", "noeud", "id"]),
+            "Node",
+            "",
+            "identifier",
+        )?;
         let status = match number(row, &["status", "statut"]) {
             Some(code) => NodeStatus::from_code(code as i32),
             None if graph => Some(match row.get("type").and_then(Json::text).as_deref() {
@@ -222,14 +253,20 @@ fn read_nodes(rows: &[&Json], graph: bool, net: &mut Network) -> Result<()> {
             }),
             None => None,
         };
-        let elevation = number(row, &["elevation_m", "elevationM", "haut"]).or(graph.then_some(0.0));
+        let elevation =
+            number(row, &["elevation_m", "elevationM", "haut"]).or(graph.then_some(0.0));
         net.nodes.push(Node {
             elevation: required(elevation, "Node", &id, "elevation")?,
             x: number(row, &["x", "xdata", "sourceX"]).unwrap_or(0.0),
             y: number(row, &["y", "ydata", "sourceY"]).unwrap_or(0.0),
             taps: number(row, &["nbrob"]),
-            orifice_ideal: number(row, &["ideal_orifice_m", "idealOrificeM", "orif_ideal"]).unwrap_or(0.0),
-            orifice_commercial: number(row, &["commercial_orifice_m", "commercialOrificeM", "orif_com"]).unwrap_or(0.0),
+            orifice_ideal: number(row, &["ideal_orifice_m", "idealOrificeM", "orif_ideal"])
+                .unwrap_or(0.0),
+            orifice_commercial: number(
+                row,
+                &["commercial_orifice_m", "commercialOrificeM", "orif_com"],
+            )
+            .unwrap_or(0.0),
             status: required(status, "Node", &id, "status (0, 1 or 2)")?,
             id,
         });
@@ -239,19 +276,50 @@ fn read_nodes(rows: &[&Json], graph: bool, net: &mut Network) -> Result<()> {
 
 fn read_pipes(rows: &[&Json], net: &mut Network) -> Result<()> {
     for row in rows {
-        let id = text(row, &["edge_id", "edgeId", "external_edge_id", "externalEdgeId", "id"])
-            .unwrap_or_else(|| format!("A{}", net.arcs.len() + 1));
-        let from = required(text(row, &["pred", "predecessorId", "predecessor_id", "sourceId"]), "Pipe", &id, "predecessor")?;
-        let to = required(text(row, &["succ", "successorId", "successor_id", "targetId"]), "Pipe", &id, "successor")?;
+        let id = text(
+            row,
+            &[
+                "edge_id",
+                "edgeId",
+                "external_edge_id",
+                "externalEdgeId",
+                "id",
+            ],
+        )
+        .unwrap_or_else(|| format!("A{}", net.arcs.len() + 1));
+        let from = required(
+            text(
+                row,
+                &["pred", "predecessorId", "predecessor_id", "sourceId"],
+            ),
+            "Pipe",
+            &id,
+            "predecessor",
+        )?;
+        let to = required(
+            text(row, &["succ", "successorId", "successor_id", "targetId"]),
+            "Pipe",
+            &id,
+            "successor",
+        )?;
         let id1 = text(row, &["first_diameter_id", "firstDiameterId", "ID1"]);
         let id2 = text(row, &["second_diameter_id", "secondDiameterId", "ID2"]);
         let length = number(row, &["length_m", "lengthM", "length", "lon"]);
         let length2 = number(row, &["second_length_m", "secondLengthM", "lon2"]).unwrap_or(0.0);
         let has_pipe1 = pipe_ref(id1.clone(), 1.0).is_some_and(|p| !p.is_empty());
-        let length1 = number(row, &["first_length_m", "firstLengthM", "lon1"])
-            .unwrap_or(if has_pipe1 { length.unwrap_or(0.0) } else { 0.0 });
+        let length1 =
+            number(row, &["first_length_m", "firstLengthM", "lon1"]).unwrap_or(if has_pipe1 {
+                length.unwrap_or(0.0)
+            } else {
+                0.0
+            });
         let closed = row
-            .first(&["operational_status", "operationalStatus", "status", "edgeStatus"])
+            .first(&[
+                "operational_status",
+                "operationalStatus",
+                "status",
+                "edgeStatus",
+            ])
             .and_then(Json::text)
             .is_some_and(|t| CLOSED_STATES.contains(&t.to_uppercase().as_str()));
         let enabled = match row.first(&["enabled", "is_open", "isOpen"]) {
@@ -267,7 +335,9 @@ fn read_pipes(rows: &[&Json], net: &mut Network) -> Result<()> {
             pipe1: pipe_ref(id1, length1),
             length2,
             pipe2: pipe_ref(id2, length2),
-            state: ArcState::from_code(&text(row, &["metadata_n", "metadataN", "N"]).unwrap_or_default()),
+            state: ArcState::from_code(
+                &text(row, &["metadata_n", "metadataN", "N"]).unwrap_or_default(),
+            ),
             open: enabled && !closed,
             id,
         });
@@ -278,12 +348,19 @@ fn read_pipes(rows: &[&Json], net: &mut Network) -> Result<()> {
 fn read_clients(rows: &[&Json], behaviors: &[&Json], net: &mut Network) -> Result<()> {
     for row in rows {
         let id = text(row, &["client", "clientId", "client_id"]).unwrap_or_default();
-        let terminal = required(text(row, &["borne", "terminalId", "terminal_id"]), "Client", &id, "terminal")?;
+        let terminal = required(
+            text(row, &["borne", "terminalId", "terminal_id"]),
+            "Client",
+            &id,
+            "terminal",
+        )?;
         let (p, t) = match text(row, &["behavior_id", "behaviorId"]) {
             Some(b) => {
                 let behavior = behaviors
                     .iter()
-                    .find(|x| text(x, &["behaviorId", "behavior_id"]).as_deref() == Some(b.as_str()))
+                    .find(|x| {
+                        text(x, &["behaviorId", "behavior_id"]).as_deref() == Some(b.as_str())
+                    })
                     .ok_or_else(|| Error::Format(format!("Unknown client behavior '{b}'.")))?;
                 (
                     number(behavior, &["openProbability", "open_probability"]),
@@ -319,11 +396,16 @@ fn read_catalogues(tables: &Json, net: &mut Network) {
         };
         let pipe = Pipe {
             id: text(row, &["ID", "id", "diameterId", "diameter_id"]).unwrap_or_default(),
-            nominal: text(row, &["Nominal", "size", "nominalSize", "nominal_size"]).unwrap_or_default(),
+            nominal: text(row, &["Nominal", "size", "nominalSize", "nominal_size"])
+                .unwrap_or_default(),
             sdr: text(row, &["SDR", "sdr"]).unwrap_or_default(),
             diameter,
             cost: number(row, &["cost"]).unwrap_or(0.0),
-            max_pressure: number(row, &["Pmax", "pressure", "maximumPressure", "maximum_pressure"]).unwrap_or(0.0),
+            max_pressure: number(
+                row,
+                &["Pmax", "pressure", "maximumPressure", "maximum_pressure"],
+            )
+            .unwrap_or(0.0),
             kind: text(row, &["type", "Type", "typeCode", "type_code"]).unwrap_or_default(),
             roughness: number(row, &["Roughness", "rugo", "rugosité", "roughness"]).unwrap_or(0.0),
         };
@@ -361,13 +443,25 @@ pub fn read_domain_json(text_in: &str) -> Result<Read> {
     let domain = root.get("domain").unwrap_or(&root);
     let graph = domain.get("tables").is_none() && domain.get("nodes").is_some();
     let empty = Json::Object(Vec::new());
-    let tables = if graph { domain } else { domain.get("tables").unwrap_or(&empty) };
+    let tables = if graph {
+        domain
+    } else {
+        domain.get("tables").unwrap_or(&empty)
+    };
     let rows = |k: &[&str]| tables.first(k).map(Json::rows).unwrap_or_default();
     let mut net = Network {
-        name: text(domain, &["name"]).or_else(|| text(&root, &["name"])).unwrap_or_default(),
+        name: text(domain, &["name"])
+            .or_else(|| text(&root, &["name"]))
+            .unwrap_or_default(),
         ..Network::default()
     };
-    for key in ["technicalParams", "technical_params", "designParams", "design_params", "params"] {
+    for key in [
+        "technicalParams",
+        "technical_params",
+        "designParams",
+        "design_params",
+        "params",
+    ] {
         if let Some(Json::Object(m)) = domain.get(key) {
             for (k, v) in m {
                 if let Some(value) = param_text(v) {
@@ -386,22 +480,34 @@ pub fn read_domain_json(text_in: &str) -> Result<Read> {
             .collect();
     }
     read_nodes(&rows(&["nodes"]), graph, &mut net)?;
-    read_pipes(&rows(if graph { &["edges"] } else { &["pipes", "edges"] }), &mut net)?;
+    read_pipes(
+        &rows(if graph {
+            &["edges"]
+        } else {
+            &["pipes", "edges"]
+        }),
+        &mut net,
+    )?;
     let behaviors = rows(&["clientBehaviors", "client_behaviors"]);
     read_clients(&rows(&["clients"]), &behaviors, &mut net)?;
     for row in rows(&["bornes"]) {
         if let (Some(id), Some(pressure)) = (
             text(row, &["borne", "terminalId", "terminal_id"]),
-            number(row, &["pressure", "requiredPressureM", "required_pressure_m"]),
+            number(
+                row,
+                &["pressure", "requiredPressureM", "required_pressure_m"],
+            ),
         ) {
             net.terminals.push(Terminal { id, pressure });
         }
     }
     read_catalogues(tables, &mut net);
     for row in rows(&["loadflow"]) {
-        if let (Some(succ), Some(q), Some(m)) =
-            (text(row, &["succ"]), number(row, &["designFlow"]), number(row, &["margin"]))
-        {
+        if let (Some(succ), Some(q), Some(m)) = (
+            text(row, &["succ"]),
+            number(row, &["designFlow"]),
+            number(row, &["margin"]),
+        ) {
             net.loadflow.push((succ, q, m));
         }
     }
@@ -431,5 +537,8 @@ pub fn read_domain_json(text_in: &str) -> Result<Read> {
     };
     warnings.extend(complete_demand(&mut net));
     warnings.extend(net.apply_client_data());
-    Ok(Read { network: net, warnings })
+    Ok(Read {
+        network: net,
+        warnings,
+    })
 }

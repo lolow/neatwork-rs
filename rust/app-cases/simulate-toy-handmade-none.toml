@@ -1,5 +1,5 @@
 bin.name = "neatwork"
-args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "handmade"]
+args = ["simulate", "toy.dsg", "-o", "out.sim", "--type", "handmade", "--engine", "nw4"]
 status.code = 0
 fs.sandbox = true
 fs.base = "simulate-toy-handmade-none.in"
