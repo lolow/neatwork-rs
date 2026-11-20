@@ -117,3 +117,34 @@ Context: `rust-anything analyze` reports the engine as one tangled piece of abou
 Decision: Use `analyze` for the plan, `app record` and `app replay` for the equivalence cases, and port the engine as one piece. The checks are `cargo fmt`, `cargo clippy -D warnings`, `cargo test` and `app replay`, in place of `gate` on unit crates.
 
 Consequences: No bridge crate and no front door exist. The Rust program is standalone from the start.
+
+## ADR-014: Desktop interface with Slint
+
+Status: accepted (2026-11-20). Supersedes the scope limit of ADR-001.
+
+Context: The user asked to rebuild all the Java windows in Rust, with Slint, as open-source code, and to add a drawing of the network.
+
+Decision: Add the crate `neatwork-gui` with Slint 1.19 (Fluent style, light colors). The windows follow `rust/GUI-SPEC.md`. Dialogs open over the main window. The Network tab draws the network in three layouts.
+
+Consequences: The interface crate needs Rust 1.95. Slint is open source under GPLv3 or its royalty-free license, so the project license must fit one of them. The generated Slint code needs `unsafe`, so this crate denies unsafe code instead of forbidding it.
+
+## ADR-015: Interface texts from the Java bundles
+
+Status: accepted (2026-11-20)
+
+Decision: The `.slint` files call `T.s("key")` with the keys of `neatwork_*.properties`. The Rust code reads the bundles as `PropertyResourceBundle` does. New texts have `Gui.*` keys. A language change applies at once.
+
+## ADR-016: Interface logic in the core crate
+
+Status: accepted (2026-11-20)
+
+Decision: The logic of the Java windows that produces text (tree view, statistics, quick check, HTML reports, project names) is in `neatwork_core::gui_support`. Its tests compare with outputs of the Java code (`reference/harness/oracle/Oracle.java`).
+
+## ADR-017: Fix visible defects of the Java windows
+
+Status: accepted (2026-11-20)
+
+Context: Some Java windows show wrong data or lose data (see `docs/gui.md`). The file formats do not depend on them, except the design orifice list.
+
+Decision: The interface fixes them and lists each fix in `docs/gui.md`. Engine behavior (ADR-008) does not change.
+

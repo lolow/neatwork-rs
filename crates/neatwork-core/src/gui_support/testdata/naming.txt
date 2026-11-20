@@ -1,0 +1,16 @@
+toy -> toy
+toy -> toy (2)
+toy -> toy (3)
+toy (2) -> toy (3)
+toy (2) -> toy (2)
+toy (x) -> toy (x) (2)
+a(5) ->  (5)
+toy)( -> toy)( (2)
+toy => toy
+toy => toy (2)
+toy => toy (3)
+toy (2) => toy (2) (2)
+toy (2) => toy (2)
+toy (x) => toy (x) (2)
+a(5) => a(5) (2)
+toy)( => toy)( (2)

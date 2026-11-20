@@ -1,0 +1,242 @@
+// Shared types and the two globals that the Rust code drives.
+
+// Column of a table. kind: 0 text, 1 combo (choices in AppState.diameter-choices),
+// 2 check box ("true"/"false"), 3 percent bar (0-100, green/yellow/red).
+export struct Column {
+    title: string,
+    // left edge of the column (sum of the widths before it)
+    x: length,
+    width: length,
+    editable: bool,
+    kind: int,
+}
+
+export struct Row {
+    cells: [string],
+    selected: bool,
+    // Cells that are read-only in this row (for example Diam 2 when Length 2 is 0).
+    locked: [bool],
+}
+
+export struct TableData {
+    columns: [Column],
+    rows: [Row],
+    // The table has edits that are not applied yet (gray background).
+    changed: bool,
+    // Copy is disabled after an edit, as in the Java program.
+    can-copy: bool,
+}
+
+export struct ProjectTab {
+    title: string,
+    tooltip: string,
+    kind: int, // 0 topography, 1 design
+}
+
+// Tree view cell. kind: 0 node, 1 elbow (L), 2 vertical line (I), 3 tee (T).
+export struct TreeCell {
+    row: int,
+    col: int,
+    kind: int,
+    label: string,
+    node-type: int,
+    highlight: bool,
+}
+
+export struct DrawNode {
+    x: float,
+    y: float,
+    label: string,
+    color: color,
+    radius: float,
+    highlight: bool,
+}
+
+export struct DrawEdge {
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    color: color,
+    width: float,
+    highlight: bool,
+}
+
+export struct LegendItem {
+    color: color,
+    label: string,
+}
+
+// Parameter row of the make-design dialog. header rows have no value.
+export struct ParamRow {
+    label: string,
+    value: string,
+    header: bool,
+}
+
+// Texts of the Java message bundles (neatwork_*.properties).
+export global T {
+    in property <int> lang;
+    pure callback lookup(int, string) -> string;
+    public pure function s(key: string) -> string {
+        return lookup(lang, key);
+    }
+}
+
+export global AppState {
+    // ---- projects
+    in property <[ProjectTab]> projects;
+    in-out property <int> current: -1;
+    in property <int> current-kind: -1;
+    in property <int> project-count;
+    callback select-project(int);
+    callback menu(string);
+
+    // ---- panes of the current project
+    in-out property <int> pane-tab;
+    in property <TableData> nodes-table;
+    in property <TableData> pipes-table;
+    in property <string> cost-text;
+    in property <[string]> diameter-choices;
+    in-out property <string> text-content;
+    callback text-apply(string);
+    callback text-undo();
+
+    // tables: id 0 nodes, 1 pipes, 10 db diameters, 11 db orifices,
+    // 20 md diameters, 21 md orifices, 22 md load factors, 30 faucet selection,
+    // 40 simulation results, 50 generic dialog table, 51 quick check
+    callback table-edited(int, int, int, string);
+    callback table-row-clicked(int, int, bool, bool);
+    callback table-action(int, string);
+
+    // tree view
+    in property <[TreeCell]> tree-cells;
+    in property <int> tree-rows;
+    in property <int> tree-cols;
+    in property <string> tree-message;
+    in property <int> tree-focus-row: -1;
+    in property <int> tree-focus-col: -1;
+    in property <int> tree-focus-serial;
+    callback tree-search(string);
+    callback tree-clicked(int, int);
+
+    // network drawing
+    in property <[DrawNode]> net-nodes;
+    in property <[DrawEdge]> net-edges;
+    in property <float> net-width: 100;
+    in property <float> net-height: 100;
+    in-out property <int> net-layout;
+    in-out property <int> net-coloring;
+    in property <[string]> net-colorings;
+    in property <[LegendItem]> net-legend;
+    in property <string> net-info;
+    in-out property <float> net-zoom: 1;
+    callback net-node-clicked(int);
+    callback net-view-changed();
+
+    // simulation pane
+    in property <[string]> sim-list;
+    in-out property <int> sim-current: -1;
+    in property <string> sim-params-text;
+    in-out property <int> sim-table-kind: 1;
+    in property <TableData> sim-table;
+    callback sim-select(int);
+    callback sim-table-select(int);
+
+    // ---- message box: buttons 0 ok, 1 yes/no, 2 ok/cancel
+    in property <bool> msg-visible;
+    in property <string> msg-title;
+    in property <string> msg-text;
+    in property <int> msg-buttons;
+    callback msg-answer(bool);
+
+    // ---- file dialog
+    in property <bool> fd-visible;
+    in property <string> fd-title;
+    in property <string> fd-path;
+    in property <string> fd-heading;
+    in property <[string]> fd-files;
+    in-out property <string> fd-name;
+    in property <bool> fd-name-editable;
+    in property <string> fd-action-label;
+    in property <string> fd-cancel-label;
+    in property <string> fd-status;
+    callback fd-browse();
+    callback fd-pick(int, bool);
+    callback fd-action();
+    callback fd-cancel();
+
+    // ---- make design dialog
+    in property <bool> md-visible;
+    in-out property <int> md-tab;
+    in property <TableData> md-diameters;
+    in property <TableData> md-orifices;
+    in property <TableData> md-load-factors;
+    in property <[ParamRow]> md-params;
+    callback md-param-edited(int, string);
+    in property <[string]> md-pipes;
+    in-out property <int> md-pipe: 0;
+    in-out property <int> md-kind: 0;
+    in-out property <string> md-value;
+    in-out property <string> md-length;
+    in-out property <int> md-diam1: 0;
+    in-out property <int> md-diam2: 0;
+    in property <[StandardListViewItem]> md-constraint-items;
+    in-out property <int> md-constraint-selected: -1;
+    callback md-add-constraint();
+    callback md-delete-constraint();
+    callback md-run();
+    callback md-abort();
+
+    // ---- progress dialog
+    in property <bool> pg-visible;
+    in property <string> pg-status;
+    in property <int> pg-value;
+    callback pg-close();
+
+    // ---- table dialog (pressures, design parameters, load factors, units)
+    in property <bool> td-visible;
+    in property <string> td-title;
+    in property <string> td-text;
+    in property <TableData> td-table;
+    callback td-close();
+
+    // ---- information dialog (summary, about)
+    in property <bool> info-visible;
+    in property <string> info-title;
+    in property <string> info-text;
+    in property <bool> info-about;
+    callback info-close();
+
+    // ---- quick check
+    in property <bool> qc-visible;
+    in-out property <string> qc-threshold;
+    in-out property <string> qc-faucet;
+    in property <TableData> qc-table;
+    callback qc-apply();
+    callback qc-close();
+
+    // ---- database
+    in property <bool> db-visible;
+    in-out property <int> db-tab;
+    in property <TableData> db-diameters;
+    in property <TableData> db-orifices;
+    callback db-close();
+
+    // ---- new simulation
+    in property <bool> ns-visible;
+    in-out property <string> ns-nbsim;
+    in-out property <string> ns-opentaps;
+    in-out property <string> ns-low;
+    in-out property <string> ns-high;
+    in-out property <string> ns-target;
+    in-out property <int> ns-orifice;
+    in-out property <int> ns-type;
+    callback ns-run();
+    callback ns-close();
+
+    // ---- faucet selection
+    in property <bool> ts-visible;
+    in property <TableData> ts-table;
+    callback ts-ok();
+}

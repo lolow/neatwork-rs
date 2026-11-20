@@ -1,0 +1,257 @@
+// Table of the Java "FancyTable": fixed columns, editable cells, row
+// selection, and a gray background while edits are not applied.
+import { ScrollView, CheckBox, Button, ListView } from "std-widgets.slint";
+import { AppState, T, TableData, Column, Row } from "state.slint";
+
+component ComboCell inherits Rectangle {
+    in property <string> text;
+    in property <bool> enabled;
+    callback picked(int);
+    Text {
+        x: 4px;
+        width: parent.width - 8px;
+        text: root.text;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    TouchArea {
+        enabled: root.enabled;
+        clicked => { popup.show(); }
+    }
+    popup := PopupWindow {
+        x: 0;
+        y: root.height;
+        width: 260px;
+        height: min(300px, AppState.diameter-choices.length * 22px + 4px);
+        Rectangle {
+            background: white;
+            border-width: 1px;
+            border-color: #666;
+            ListView {
+                for choice[i] in AppState.diameter-choices: Rectangle {
+                    height: 22px;
+                    background: ta.has-hover ? #dde8f5 : transparent;
+                    Text {
+                        x: 4px;
+                        text: choice;
+                        vertical-alignment: center;
+                    }
+                    ta := TouchArea {
+                        clicked => {
+                            root.picked(i);
+                            popup.close();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+component BarCell inherits Rectangle {
+    in property <string> text;
+    property <float> value: text.to-float();
+    Rectangle {
+        x: 2px;
+        y: 3px;
+        height: parent.height - 6px;
+        width: (parent.width - 4px) * clamp(root.value, 0, 100) / 100;
+        background: root.value > 80 ? #e04040 : root.value > 60 ? #e8d040 : root.value > 0 ? #40b040 : transparent;
+    }
+    Text {
+        width: parent.width;
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component EditCell inherits Rectangle {
+    in property <string> text;
+    in property <bool> editable;
+    callback committed(string);
+    callback focused();
+    input := TextInput {
+        x: 4px;
+        width: parent.width - 9px;
+        height: parent.height;
+        text: root.text;
+        read-only: !root.editable;
+        single-line: true;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        accepted => {
+            if (self.text != root.text) {
+                root.committed(self.text);
+            }
+        }
+        changed has-focus => {
+            if (self.has-focus) {
+                root.focused();
+            } else if (self.text != root.text) {
+                root.committed(self.text);
+            }
+        }
+    }
+}
+
+export component DataTable inherits Rectangle {
+    in property <int> table-id;
+    in property <TableData> data;
+    in property <length> row-height: 22px;
+    property <length> header-height: 24px;
+    property <length> gutter: 26px;
+    property <length> content-w: root.gutter + root.columns-width();
+    pure function columns-width() -> length {
+        return data.columns.length == 0 ? 0px
+            : data.columns[data.columns.length - 1].x + data.columns[data.columns.length - 1].width;
+    }
+    border-width: 1px;
+    border-color: #8a8a8a;
+    background: data.changed ? #c8c8c8 : #ffffff;
+    clip: true;
+
+    // header, moved with the horizontal scroll position
+    Rectangle {
+        y: 0;
+        height: root.header-height;
+        background: #e6e6e6;
+        clip: true;
+        Rectangle {
+            x: sv.content-x;
+            width: root.content-w;
+            for col[c] in data.columns: Rectangle {
+                x: root.gutter + col.x;
+                width: col.width;
+                border-width: 1px;
+                border-color: #b4b4b4;
+                Text {
+                    x: 3px;
+                    width: parent.width - 6px;
+                    text: col.title;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+    sv := ScrollView {
+        y: root.header-height;
+        height: root.height - root.header-height;
+        content-width: root.content-w;
+        content-height: data.rows.length * root.row-height;
+        for row[r] in data.rows: Rectangle {
+            y: r * root.row-height;
+            height: root.row-height;
+            width: root.content-w;
+            background: row.selected ? #b8d4f0 : transparent;
+            // row header: click to select (ctrl / shift extend the selection)
+            Rectangle {
+                x: 0;
+                width: root.gutter;
+                background: row.selected ? #8fb6e0 : #eeeeee;
+                border-width: 1px;
+                border-color: #cccccc;
+                Text {
+                    text: r + 1;
+                    font-size: 10px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                TouchArea {
+                    pointer-event(ev) => {
+                        if (ev.kind == PointerEventKind.down && ev.button == PointerEventButton.left) {
+                            AppState.table-row-clicked(root.table-id, r, ev.modifiers.control, ev.modifiers.shift);
+                        }
+                    }
+                }
+            }
+            for cell[c] in row.cells: Rectangle {
+                x: root.gutter + data.columns[c].x;
+                width: data.columns[c].width;
+                border-width: 1px;
+                border-color: #dddddd;
+                property <bool> can-edit: data.columns[c].editable && !(c < row.locked.length && row.locked[c]);
+                if data.columns[c].kind == 0: EditCell {
+                    text: cell;
+                    editable: parent.can-edit;
+                    committed(t) => { AppState.table-edited(root.table-id, r, c, t); }
+                    focused => {
+                        if (!row.selected) {
+                            AppState.table-row-clicked(root.table-id, r, false, false);
+                        }
+                    }
+                }
+                if data.columns[c].kind == 1: ComboCell {
+                    text: cell;
+                    enabled: parent.can-edit;
+                    picked(i) => { AppState.table-edited(root.table-id, r, c, "#" + i); }
+                }
+                if data.columns[c].kind == 2: CheckBox {
+                    x: (parent.width - 20px) / 2;
+                    checked: cell == "true";
+                    enabled: parent.can-edit;
+                    toggled => { AppState.table-edited(root.table-id, r, c, self.checked ? "true" : "false"); }
+                }
+                if data.columns[c].kind == 3: BarCell {
+                    text: cell;
+                }
+            }
+        }
+    }
+}
+
+// Tool bar of a table: insert, delete, copy, paste, undo, apply.
+// The labels follow the Java tooltips (keys given by the caller).
+export component TableToolbar inherits HorizontalLayout {
+    in property <int> table-id;
+    in property <string> title;
+    in property <string> insert-key;
+    in property <string> delete-key;
+    in property <string> undo-key: "TopoTablePane.Undo_modifications";
+    in property <string> apply-key: "TopoTablePane.Apply_modifications";
+    in property <bool> can-copy: true;
+    in property <bool> show-export: false;
+    spacing: 4px;
+    padding-bottom: 2px;
+    Text {
+        text: root.title;
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+    Rectangle { width: 12px; }
+    Button {
+        text: "+ " + T.s(root.insert-key);
+        clicked => { AppState.table-action(root.table-id, "insert"); }
+    }
+    Button {
+        text: "- " + T.s(root.delete-key);
+        clicked => { AppState.table-action(root.table-id, "delete"); }
+    }
+    Button {
+        text: T.s("FancyTable.Copy");
+        enabled: root.can-copy;
+        clicked => { AppState.table-action(root.table-id, "copy"); }
+    }
+    Button {
+        text: T.s("FancyTable.Paste");
+        clicked => { AppState.table-action(root.table-id, "paste"); }
+    }
+    Button {
+        text: T.s(root.undo-key);
+        clicked => { AppState.table-action(root.table-id, "undo"); }
+    }
+    Button {
+        text: T.s(root.apply-key);
+        primary: true;
+        clicked => { AppState.table-action(root.table-id, "apply"); }
+    }
+    if root.show-export: Button {
+        text: T.s("DatabaseDialog.Report_in_HTML");
+        clicked => { AppState.table-action(root.table-id, "export"); }
+    }
+    Rectangle { horizontal-stretch: 1; }
+}

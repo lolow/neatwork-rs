@@ -37,7 +37,9 @@ impl Topographie {
         t
     }
 
-    fn set_content(&mut self, content: &str) {
+    /// `setContent`: parse the project text again. Messages go to
+    /// `network.info`; on an error the properties are not applied.
+    pub fn set_content(&mut self, content: &str) {
         let v = read_csv(content);
         let mut properties = JProperties::with_defaults(&self.properties);
         self.network = Network::new(self.network.locale);

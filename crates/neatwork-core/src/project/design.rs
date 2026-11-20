@@ -68,7 +68,9 @@ impl Design {
         d
     }
 
-    fn set_content(&mut self, content: &str) {
+    /// `setContent`: parse the project text again. Messages go to
+    /// `network.info`; on an error the properties are not applied.
+    pub fn set_content(&mut self, content: &str) {
         let v = read_csv(content);
         let mut properties = JProperties::with_defaults(&self.properties);
         self.diam_table = JHashtable::new();
@@ -209,6 +211,16 @@ impl Design {
 
     /// `getContent`: the `.dsg` text.
     pub fn content(&self) -> String {
+        let mut c = self.nodes_content();
+        c.push_str(&self.pipes_content());
+        c.push_str(&self.properties_content());
+        c.push_str(&self.diameters_content());
+        c.push_str(&self.orifices_content());
+        c
+    }
+
+    /// `getNodesContent`.
+    pub fn nodes_content(&self) -> String {
         let mut c = String::from("!Nodes\n");
         for n in &self.network.nodes {
             c.push_str(&format!(
@@ -222,7 +234,12 @@ impl Design {
                 n.node_type
             ));
         }
-        c.push_str("!Pipes\n");
+        c
+    }
+
+    /// `getPipesContent`.
+    pub fn pipes_content(&self) -> String {
+        let mut c = String::from("!Pipes\n");
         for p in &self.network.pipes {
             c.push_str(&format!(
                 "{},{},{},{},{},{},{},N\n",
@@ -235,7 +252,12 @@ impl Design {
                 p.ref_diam2
             ));
         }
-        c.push_str("!Default properties\n");
+        c
+    }
+
+    /// `getPropertiesContent`: the `topo.*` parameters and the load factors.
+    pub fn properties_content(&self) -> String {
+        let mut c = String::from("!Default properties\n");
         for name in self.properties.property_names() {
             if name.starts_with("topo.") && name.ends_with(".value") {
                 let value = self.properties.get_property(&name).unwrap_or("");
@@ -246,7 +268,12 @@ impl Design {
         for (k, v) in self.load_factor.entries() {
             c.push_str(&format!("{k},{v},0\n"));
         }
-        c.push_str("!Diameters\n");
+        c
+    }
+
+    /// `getDiametersContent`.
+    pub fn diameters_content(&self) -> String {
+        let mut c = String::from("!Diameters\n");
         for (k, d) in self.diam_table.entries() {
             c.push_str(&format!(
                 "{k},{},{},{},{},{},{},{},N\n",
@@ -259,7 +286,12 @@ impl Design {
                 double_to_string(d.roughness)
             ));
         }
-        c.push_str("!Orifices\n");
+        c
+    }
+
+    /// `getOrificesContent`.
+    pub fn orifices_content(&self) -> String {
+        let mut c = String::from("!Orifices\n");
         for o in &self.orifices {
             c.push_str(&format!("{o},N,N,N,N,N\n"));
         }

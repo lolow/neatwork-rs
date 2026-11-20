@@ -1,0 +1,227 @@
+// Main window of NeatWork (Java FrameNeatwork and ProjectPane).
+import { Palette } from "std-widgets.slint";
+import { AppState, T, ProjectTab } from "state.slint";
+import { ProjectPane } from "panes.slint";
+import { MessageBox, FileDialog, MakeDesignDialog, ProgressDialog, TableDialog, InfoDialog, QuickCheckDialog, DatabaseDialog, NewSimulationDialog, FaucetSelectionDialog } from "dialogs.slint";
+
+export { AppState, T }
+
+component ProjectTabs inherits Rectangle {
+    height: 30px;
+    background: #dcdcdc;
+    Flickable {
+        content-width: tabs.preferred-width;
+        tabs := HorizontalLayout {
+            spacing: 2px;
+            padding-left: 4px;
+            if AppState.projects.length == 0: Rectangle {
+                width: 110px;
+                background: white;
+                Text {
+                    text: T.s("ProjectPane.NeatWork");
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            for p[i] in AppState.projects: Rectangle {
+                width: label.preferred-width + 34px;
+                background: i == AppState.current ? white : ta.has-hover ? #ececec : #c4c4c4;
+                border-width: 1px;
+                border-color: #9a9a9a;
+                HorizontalLayout {
+                    padding-left: 6px;
+                    padding-right: 8px;
+                    spacing: 6px;
+                    Rectangle {
+                        width: 12px;
+                        height: 12px;
+                        y: (parent.height - 12px) / 2;
+                        background: p.kind == 0 ? #23d12f : #2fb1d1;
+                        border-width: 1px;
+                        border-color: #333;
+                    }
+                    label := Text {
+                        text: p.title;
+                        vertical-alignment: center;
+                        font-weight: i == AppState.current ? 700 : 400;
+                    }
+                }
+                ta := TouchArea {
+                    clicked => { AppState.select-project(i); }
+                }
+            }
+        }
+    }
+}
+
+export component MainWindow inherits Window {
+    title: "NeatWork";
+    preferred-width: 1100px;
+    preferred-height: 760px;
+    min-width: 750px;
+    min-height: 550px;
+    icon: @image-url("images/logo.jpg");
+    // The Java program is light; the tables draw on white.
+    init => {
+        Palette.color-scheme = ColorScheme.light;
+    }
+
+    MenuBar {
+        Menu {
+            title: T.s("FrameNeatwork.File");
+            MenuItem {
+                title: T.s("FrameNeatwork.New_Topography...");
+                shortcut: @keys(Control + N);
+                activated => { AppState.menu("new-topo"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Open_Topography...");
+                shortcut: @keys(Control + O);
+                activated => { AppState.menu("open-topo"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Open_Design...");
+                activated => { AppState.menu("open-design"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Close");
+                enabled: AppState.project-count > 0;
+                activated => { AppState.menu("close"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Close_All");
+                enabled: AppState.project-count > 1;
+                activated => { AppState.menu("close-all"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Save");
+                shortcut: @keys(Control + S);
+                enabled: AppState.current >= 0;
+                activated => { AppState.menu("save"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Save_as...");
+                enabled: AppState.current >= 0;
+                activated => { AppState.menu("save-as"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Delete_a_Topography...");
+                activated => { AppState.menu("delete-topo"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Delete_a_Design...");
+                activated => { AppState.menu("delete-design"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Exit");
+                shortcut: @keys(Control + Q);
+                activated => { AppState.menu("exit"); }
+            }
+        }
+        Menu {
+            title: T.s("FrameNeatwork.Topography");
+            enabled: AppState.current-kind == 0;
+            MenuItem {
+                title: T.s("FrameNeatwork.Quick_Check...");
+                activated => { AppState.menu("quick-check"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Network_summary...");
+                activated => { AppState.menu("topo-summary"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Report_in_HTML...");
+                activated => { AppState.menu("topo-report"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Make_Design...");
+                activated => { AppState.menu("start-design"); }
+            }
+        }
+        Menu {
+            title: T.s("FrameNeatwork.Design");
+            enabled: AppState.current-kind == 1;
+            MenuItem {
+                title: T.s("FrameNeatwork.Extract_topography");
+                activated => { AppState.menu("extract-topo"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Report_in_HTML...");
+                activated => { AppState.menu("design-report"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: T.s("FrameNeatwork.Design_Parameters...");
+                activated => { AppState.menu("design-params"); }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.Design_Load_Factors...");
+                activated => { AppState.menu("design-load-factors"); }
+            }
+        }
+        Menu {
+            title: T.s("FrameNeatwork.Database");
+            MenuItem {
+                title: T.s("FrameNeatwork.Edit_database...");
+                activated => { AppState.menu("database"); }
+            }
+        }
+        Menu {
+            title: T.s("FrameNeatwork.Help");
+            MenuItem {
+                title: T.s("FrameNeatwork.Units");
+                activated => { AppState.menu("units"); }
+            }
+            Menu {
+                title: T.s("FrameNeatwork.Language");
+                MenuItem {
+                    title: T.s("FrameNeatwork.English");
+                    checkable: true;
+                    checked: T.lang == 0;
+                    activated => { AppState.menu("lang-en"); }
+                }
+                MenuItem {
+                    title: T.s("FrameNeatwork.Spanish");
+                    checkable: true;
+                    checked: T.lang == 2;
+                    activated => { AppState.menu("lang-sp"); }
+                }
+                MenuItem {
+                    title: T.s("FrameNeatwork.French");
+                    checkable: true;
+                    checked: T.lang == 1;
+                    activated => { AppState.menu("lang-fr"); }
+                }
+            }
+            MenuItem {
+                title: T.s("FrameNeatwork.About");
+                activated => { AppState.menu("about"); }
+            }
+        }
+    }
+
+    VerticalLayout {
+        ProjectPane {
+            vertical-stretch: 1;
+        }
+        ProjectTabs { }
+    }
+
+    // dialogs, in stacking order
+    if AppState.db-visible: DatabaseDialog { }
+    if AppState.qc-visible: QuickCheckDialog { }
+    if AppState.md-visible: MakeDesignDialog { }
+    if AppState.ns-visible: NewSimulationDialog { }
+    if AppState.ts-visible: FaucetSelectionDialog { }
+    if AppState.fd-visible: FileDialog { }
+    if AppState.td-visible: TableDialog { }
+    if AppState.info-visible: InfoDialog { }
+    if AppState.pg-visible: ProgressDialog { }
+    if AppState.msg-visible: MessageBox { }
+}

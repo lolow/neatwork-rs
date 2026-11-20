@@ -19,6 +19,9 @@ The engine is one piece (ADR-013). All parts are done.
 | Simulation | `MakeSimulation`, `RunSimulation`, `SimulFlows` and helpers | done (2026-11-20) |
 | Entry points | `Loader`, `SolverDisk`, window glue | done (2026-11-20) |
 | Command line | none (new) | done (2026-11-20) |
+| Interface logic | text parts of `gui.*` | done (2026-11-20), `gui_support` |
+| Desktop interface | `gui.*` (Swing) | done (2026-11-20), `neatwork-gui` |
+| Network drawing | none (new) | done (2026-11-20) |
 
 Checks on 2026-11-20: `app replay` 16/16 for the Java reference and for `target/release/neatwork`, `cargo test` pass, `cargo clippy -D warnings` clean.
 
@@ -26,9 +29,10 @@ Checks on 2026-11-20: `app replay` 16/16 for the Java reference and for `target/
 
 1. Fix the Java defects listed in `docs/java-compatibility.md`? Each fix changes the output files.
 2. Add command line options for the diameter constraints of the design window?
-3. Add a user interface on top of `neatwork-core`?
+3. Choose the project license (GPLv3 fits Slint's open-source license). Ask APLV first.
+4. Package the interface for Windows (the main users).
 
 ## Out of scope
 
-- The Swing window, the client-server mode, printing.
+- The client-server mode and the applet mode of the Java program.
 - Code that the Java program does not call: `RunSimulation.Resolution`, `Solver.nlp`, the GLPK path.

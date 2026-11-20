@@ -1,0 +1,24 @@
+Faucet ID	flow min (0.1 l/s)	target flow (0.1 l/s)
+34	Ok	Ok
+35	Ok	Ok
+36	Ok	Ok
+37	Ok	Ok
+38	Ok	Ok
+39	Ok	Ok
+40	Ok	Ok
+41	Ok	Ok
+42	Ok	Ok
+43	Ok	Ok
+44	Ok	Ok
+45	Ok	Ok
+46	Ok	Ok
+47	Ok	Ok
+48	Ok	Ok
+49	Ok	Ok
+50	Ok	Ok
+51	Ok	Ok
+52	Ok	Ok
+53	Ok	Ok
+54	Ok	Ok
+55	Ok	Ok
+56	Ok	Ok

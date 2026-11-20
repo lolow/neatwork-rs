@@ -16,6 +16,7 @@
 //! crate copies some Java runtime behavior, in [`java`].
 
 pub mod engine;
+pub mod gui_support;
 pub mod java;
 pub mod messages;
 pub mod project;
@@ -155,36 +156,99 @@ pub fn design(
     let app = application_properties(opts.locale);
     let mut topo = Topographie::new(name, tpo, &app, opts.locale);
     let info = topo.network.info.clone();
+    let setup = prepare_make_design(&mut topo)?;
+    let modif = JHashtable::from_hashtable(&setup.load_factors);
+    let db = opts.database.clone().unwrap_or_default();
+    let made = make_design(
+        &mut topo,
+        setup.hsource,
+        &db.diameters_selection(),
+        &db.orifices_selection(),
+        &modif,
+        &opts.constraints,
+        &app,
+        solve,
+    )?;
+    Ok(DesignOutput {
+        dsg: project_file_text(&made.design.content()),
+        lp: made.lp,
+        pressures: made.pressures,
+        info,
+    })
+}
 
-    // MakeDesignDialog, then FrameNeatwork restores the heights.
+/// State of a topography when the make-design dialog opens.
+#[derive(Clone, Debug)]
+pub struct MakeDesignSetup {
+    /// Height of the source before the shift to 0.
+    pub hsource: f64,
+    /// Suggested load factor of each expanded node.
+    pub load_factors: JHashtable<String, f64>,
+}
+
+/// What `MakeDesignDialog` does when it opens: shift the heights so that
+/// the source is at 0, build the expanded network, put the heights back
+/// (as `FrameNeatwork` does), and compute the suggested load factors.
+pub fn prepare_make_design(topo: &mut Topographie) -> Result<MakeDesignSetup> {
     let hsource = topo.network.set_source_height(0.0);
     topo.make_expanded_topo();
     topo.network.set_source_height(hsource);
     let load_taps = topo.load_taps()?;
     let load_factors = topo.load_factor(&load_taps)?;
-    let modif = JHashtable::from_hashtable(&load_factors);
+    Ok(MakeDesignSetup {
+        hsource,
+        load_factors,
+    })
+}
 
-    let db = opts.database.clone().unwrap_or_default();
+/// Result of [`make_design`].
+#[derive(Clone, Debug)]
+pub struct MadeDesign {
+    /// The new design, with the topography's properties and the load
+    /// factors (not saved yet).
+    pub design: Design,
+    /// Rows `node, height, pressure, suction`.
+    pub pressures: Vec<Vec<String>>,
+    /// The LP that was solved.
+    pub lp: Lp,
+}
+
+/// Run the make design (`SolverDisk.makeDesign`, then the design built by
+/// `FrameNeatwork.runMakeDesign`). `diameters` and `orifices` are the
+/// selected catalog rows in the text form of [`Database::diameters_selection`]
+/// and [`Database::orifices_selection`]. Call [`prepare_make_design`] first.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the inputs of the make-design dialog"
+)]
+pub fn make_design(
+    topo: &mut Topographie,
+    hsource: f64,
+    diameters: &str,
+    orifices: &str,
+    load_factors: &JHashtable<String, f64>,
+    constraints: &[Constraint],
+    app: &JProperties,
+    solve: &mut dyn FnMut(&Lp) -> Result<Vec<f64>>,
+) -> Result<MadeDesign> {
     let mut net = core_topographie(&topo.core_vector()?)?;
-    apply_constraints(&mut net, &opts.constraints);
-    let ovector = orifices_vector(&read_csv(&db.orifices_selection()))?;
+    apply_constraints(&mut net, constraints);
+    let ovector = orifices_vector(&read_csv(orifices))?;
     let temp = parse_double(
         topo.properties
             .get_property_or("topo.watertemp.value", "70"),
     )
     .ok_or_else(|| Error::Parameter("topo.watertemp.value".into()))?;
-    let dvector = diameters_vector(&read_csv(&db.diameters_selection()), temp)?;
-    let md = MakeDesign::run(net, dvector, ovector, &topo.properties, &modif, solve)?;
-
-    let content = design_content(&md, &topo, hsource)?;
-    let mut design = Design::new(&topo.name, &content, &app, opts.locale);
+    let dvector = diameters_vector(&read_csv(diameters), temp)?;
+    let md = MakeDesign::run(net, dvector, ovector, &topo.properties, load_factors, solve)?;
+    let content = design_content(&md, topo, hsource)?;
+    let mut design = Design::new(&topo.name, &content, app, topo.network.locale);
     design.set_properties(&topo.properties);
-    design.set_load_factor_table(&modif);
-    Ok(DesignOutput {
-        dsg: project_file_text(&design.content()),
-        lp: md.lp.clone(),
+    design.set_load_factor_table(load_factors);
+    Ok(MadeDesign {
+        design,
         pressures: md.pressure_data(hsource),
-        info,
+        lp: md.lp.clone(),
     })
 }
 
@@ -343,72 +407,120 @@ pub fn simulate(name: &str, dsg: &str, opts: &SimulationOptions) -> Result<Strin
     design.refresh(&db);
 
     let get = |k: &str| app.get_property(k).unwrap_or("").to_string();
-    let mut nbsim = opts
-        .nb_sim
-        .clone()
-        .unwrap_or_else(|| get("simu.nbsim.value"));
-    let mut opentaps = opts
-        .open_taps
-        .clone()
-        .unwrap_or_else(|| get("simu.simopentaps.value"));
-    let orifice = opts
-        .orifice
-        .clone()
-        .unwrap_or_else(|| get("simu.typeorifice.value"));
-    let mut faucet_ref: HashMap<String, bool> = HashMap::new();
-    let type_name = match opts.kind {
-        SimulationType::Random => "random",
-        SimulationType::TapByTap => "tapbytap",
-        SimulationType::Handmade => "handmade",
+    let mut params = SimulationParameters {
+        kind: opts.kind,
+        nb_sim: opts
+            .nb_sim
+            .clone()
+            .unwrap_or_else(|| get("simu.nbsim.value")),
+        open_taps: opts
+            .open_taps
+            .clone()
+            .unwrap_or_else(|| get("simu.simopentaps.value")),
+        orifice: opts
+            .orifice
+            .clone()
+            .unwrap_or_else(|| get("simu.typeorifice.value")),
+        target_flow: None,
+        min_critical_flow: None,
+        max_critical_flow: None,
     };
     if opts.kind != SimulationType::Random {
-        let faucets = design
-            .network
-            .nodes
-            .iter()
-            .filter(|n| n.node_type == TYPE_FAUCET)
-            .count();
-        opentaps = "-".to_string();
-        nbsim = if opts.kind == SimulationType::TapByTap {
-            faucets.to_string()
+        params.open_taps = "-".to_string();
+        params.nb_sim = if opts.kind == SimulationType::TapByTap {
+            faucet_count(&design).to_string()
         } else {
             "1".to_string()
         };
     }
+    let mut faucet_ref: HashMap<String, bool> = HashMap::new();
     if opts.kind == SimulationType::Handmade {
         for t in &opts.open {
             faucet_ref.insert(t.clone(), true);
         }
     }
+    let p = simulation_properties(&design, &params);
+    let mut rng = SplitMix64(opts.seed);
+    run_simulation(&mut design, &p, &faucet_ref, &mut rng, &mut |_| {})
+}
 
-    // NewSimuDialog(design.getProperties()) and getParameters()
+/// Number of faucet nodes of a design (the run count of a tap-by-tap
+/// simulation).
+pub fn faucet_count(design: &Design) -> usize {
+    design
+        .network
+        .nodes
+        .iter()
+        .filter(|n| n.node_type == TYPE_FAUCET)
+        .count()
+}
+
+/// Fields of the new-simulation dialog. `None` keeps the design's value.
+#[derive(Clone, Debug)]
+pub struct SimulationParameters {
+    pub kind: SimulationType,
+    pub nb_sim: String,
+    pub open_taps: String,
+    /// `commercial` or `ideal`.
+    pub orifice: String,
+    pub target_flow: Option<String>,
+    pub min_critical_flow: Option<String>,
+    pub max_critical_flow: Option<String>,
+}
+
+/// `NewSimuDialog.getParameters`: the parameters of a simulation, on top of
+/// the design's properties. The order of the `set_property` calls matters:
+/// it fixes the order of the parameter lines in the `.sim` file.
+pub fn simulation_properties(design: &Design, params: &SimulationParameters) -> JProperties {
     let mut prop = JProperties::with_defaults(&design.properties);
     prop.put_all(&design.properties);
     let mut p = JProperties::with_defaults(&prop);
-    let from_prop = |k: &str| prop.get_property(k).unwrap_or("").to_string();
-    p.set_property("simu.nbsim.value", &nbsim);
-    p.set_property("simu.simopentaps.value", &opentaps);
-    p.set_property("simu.targetflow.value", &from_prop("simu.targetflow.value"));
+    let from = |v: &Option<String>, k: &str| {
+        v.clone()
+            .unwrap_or_else(|| prop.get_property(k).unwrap_or("").to_string())
+    };
+    let type_name = match params.kind {
+        SimulationType::Random => "random",
+        SimulationType::TapByTap => "tapbytap",
+        SimulationType::Handmade => "handmade",
+    };
+    p.set_property("simu.nbsim.value", &params.nb_sim);
+    p.set_property("simu.simopentaps.value", &params.open_taps);
+    p.set_property(
+        "simu.targetflow.value",
+        &from(&params.target_flow, "simu.targetflow.value"),
+    );
     p.set_property(
         "simu.mincriticalflow.value",
-        &from_prop("simu.mincriticalflow.value"),
+        &from(&params.min_critical_flow, "simu.mincriticalflow.value"),
     );
     p.set_property(
         "simu.maxcriticalflow.value",
-        &from_prop("simu.maxcriticalflow.value"),
+        &from(&params.max_critical_flow, "simu.maxcriticalflow.value"),
     );
-    p.set_property("simu.typeorifice.value", &orifice);
+    p.set_property("simu.typeorifice.value", &params.orifice);
     p.set_property("simu.typesimu.value", type_name);
+    p
+}
 
-    // SolverDisk.simulation
-    let ovector = orifices_vector(&design.core_orifices())?;
-    let _ = ovector;
+/// `SolverDisk.simulation` and `getSimulationContent`: run the simulation
+/// and return the `.sim` text. `faucet_ref` holds the open taps of a
+/// handmade simulation. `progress` receives 0 to 100.
+pub fn run_simulation(
+    design: &mut Design,
+    p: &JProperties,
+    faucet_ref: &HashMap<String, bool>,
+    rng: &mut dyn Uniform,
+    progress: &mut dyn FnMut(i32),
+) -> Result<String> {
+    // The Java code builds the orifice list too (and fails on a bad value).
+    orifices_vector(&design.core_orifices())?;
     let temp = parse_double(p.get_property_or("topo.watertemp.value", "70"))
         .ok_or_else(|| Error::Parameter("topo.watertemp.value".into()))?;
     let dvector = diameters_vector(&design.core_diameters(), temp)?;
     let net = core_design(&design.core_design()?, &dvector)?;
-    let mut rng = SplitMix64(opts.seed);
-    let ms = MakeSimulation::run(net, &p, &faucet_ref, &mut rng, opts.locale)?;
+    let locale = design.network.locale;
+    let ms = MakeSimulation::run(net, p, faucet_ref, rng, locale, progress)?;
 
     let mut content = design.content();
     content.push_str(&txt(&ms.simple_results()));
@@ -416,5 +528,6 @@ pub fn simulate(name: &str, dsg: &str, opts: &SimulationOptions) -> Result<Strin
     content.push_str(&txt(&ms.speeds()));
     content.push_str(&txt(&ms.pressures()));
     content.push_str(&ms.properties_content());
+    progress(100);
     Ok(project_file_text(&content))
 }

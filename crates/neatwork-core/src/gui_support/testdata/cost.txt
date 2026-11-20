@@ -1,0 +1,4 @@
+Design total cost: 400
+400.35299999999995
+Design total cost: 10,724
+10724.115999999998

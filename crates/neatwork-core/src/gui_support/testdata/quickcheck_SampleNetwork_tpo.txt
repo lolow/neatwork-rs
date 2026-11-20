@@ -1,0 +1,5 @@
+Faucet ID	flow min (0.1 l/s)	target flow (0.2 l/s)
+P2	Ok	Ok
+P3	Ok	Ok
+P1	Ok	Ok
+P4	Ok	Ok

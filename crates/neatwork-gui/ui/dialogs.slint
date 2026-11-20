@@ -1,0 +1,662 @@
+// Modal dialogs of the Java program, drawn over the main window.
+import { Button, LineEdit, ComboBox, TabWidget, StandardListView, ProgressIndicator, ScrollView, HorizontalBox, VerticalBox, GroupBox } from "std-widgets.slint";
+import { AppState, T, ParamRow } from "state.slint";
+import { DataTable, TableToolbar } from "table.slint";
+
+// Dimmed background and a centered panel with a title bar.
+component Dialog inherits Rectangle {
+    in property <string> title;
+    in property <length> panel-width: 420px;
+    in property <length> panel-height: 300px;
+    background: #00000060;
+    TouchArea { }   // block clicks to the window below
+    panel := Rectangle {
+        width: min(root.panel-width, root.width - 20px);
+        height: min(root.panel-height, root.height - 20px);
+        background: #f4f4f4;
+        border-width: 1px;
+        border-color: #555;
+        drop-shadow-blur: 12px;
+        drop-shadow-color: #00000080;
+        VerticalLayout {
+            Rectangle {
+                height: 28px;
+                background: #3a5f8a;
+                Text {
+                    x: 10px;
+                    text: root.title;
+                    color: white;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+            }
+            VerticalBox {
+                @children
+            }
+        }
+    }
+}
+
+component ButtonRow inherits HorizontalLayout {
+    spacing: 6px;
+    alignment: end;
+    @children
+}
+
+component FormRow inherits HorizontalLayout {
+    in property <string> label;
+    in-out property <string> value;
+    in property <length> label-width: 200px;
+    spacing: 6px;
+    Text {
+        width: root.label-width;
+        text: root.label;
+        vertical-alignment: center;
+    }
+    LineEdit {
+        text <=> root.value;
+    }
+}
+
+export component MessageBox inherits Dialog {
+    title: AppState.msg-title;
+    panel-width: 460px;
+    panel-height: 200px;
+    Text {
+        text: AppState.msg-text;
+        wrap: word-wrap;
+        vertical-stretch: 1;
+    }
+    ButtonRow {
+        if AppState.msg-buttons == 0: Button {
+            text: T.s("AboutDialog.Ok");
+            primary: true;
+            clicked => { AppState.msg-answer(true); }
+        }
+        if AppState.msg-buttons == 1: Button {
+            text: T.s("FrameNeatwork.Yes");
+            primary: true;
+            clicked => { AppState.msg-answer(true); }
+        }
+        if AppState.msg-buttons == 1: Button {
+            text: T.s("FrameNeatwork.No");
+            clicked => { AppState.msg-answer(false); }
+        }
+        if AppState.msg-buttons == 2: Button {
+            text: T.s("AboutDialog.Ok");
+            primary: true;
+            clicked => { AppState.msg-answer(true); }
+        }
+        if AppState.msg-buttons == 2: Button {
+            text: T.s("FileManagerDialog.Cancel");
+            clicked => { AppState.msg-answer(false); }
+        }
+    }
+}
+
+export component FileDialog inherits Dialog {
+    title: AppState.fd-title;
+    panel-width: 440px;
+    panel-height: 440px;
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("FileManagerDialog.Project_Path");
+            vertical-alignment: center;
+        }
+        Text {
+            text: AppState.fd-path;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+        Button {
+            text: T.s("FileManagerDialog.Select");
+            clicked => { AppState.fd-browse(); }
+        }
+    }
+    Text {
+        text: AppState.fd-heading;
+    }
+    Rectangle {
+        vertical-stretch: 1;
+        background: white;
+        border-width: 1px;
+        border-color: #999;
+        ScrollView {
+            content-height: AppState.fd-files.length * 22px;
+            for f[i] in AppState.fd-files: Rectangle {
+                y: i * 22px;
+                height: 22px;
+                width: parent.width;
+                background: f == AppState.fd-name ? #b8d4f0 : ta.has-hover ? #eef3f9 : transparent;
+                Text {
+                    x: 6px;
+                    text: f;
+                    vertical-alignment: center;
+                }
+                ta := TouchArea {
+                    clicked => { AppState.fd-pick(i, false); }
+                    double-clicked => { AppState.fd-pick(i, true); }
+                }
+            }
+        }
+    }
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("FileManagerDialog.Filename");
+            vertical-alignment: center;
+        }
+        LineEdit {
+            text <=> AppState.fd-name;
+            read-only: !AppState.fd-name-editable;
+            accepted => {
+                if (AppState.fd-name != "") {
+                    AppState.fd-action();
+                }
+            }
+        }
+    }
+    ButtonRow {
+        Button {
+            text: AppState.fd-action-label;
+            primary: true;
+            enabled: AppState.fd-name != "";
+            clicked => { AppState.fd-action(); }
+        }
+        Button {
+            text: AppState.fd-cancel-label;
+            clicked => { AppState.fd-cancel(); }
+        }
+    }
+    Text {
+        text: AppState.fd-status;
+        color: #555;
+    }
+}
+
+component SelectButtons inherits HorizontalLayout {
+    in property <int> table-id;
+    in property <string> title;
+    spacing: 4px;
+    Text {
+        text: root.title;
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+    Rectangle { horizontal-stretch: 1; }
+    Button {
+        text: T.s("ChooseMaterialPane.All");
+        clicked => { AppState.table-action(root.table-id, "select-all"); }
+    }
+    Button {
+        text: T.s("ChooseMaterialPane.None");
+        clicked => { AppState.table-action(root.table-id, "select-none"); }
+    }
+}
+
+export component MakeDesignDialog inherits Dialog {
+    title: T.s("MakeDesignDialog.Make_Design");
+    panel-width: 820px;
+    panel-height: 560px;
+    TabWidget {
+        vertical-stretch: 1;
+        current-index <=> AppState.md-tab;
+        Tab {
+            title: T.s("MakeDesignDialog.Hardware");
+            VerticalBox {
+                SelectButtons {
+                    table-id: 20;
+                    title: T.s("ChooseMaterialPane.Diameters");
+                }
+                DataTable {
+                    table-id: 20;
+                    data: AppState.md-diameters;
+                    vertical-stretch: 3;
+                }
+                SelectButtons {
+                    table-id: 21;
+                    title: T.s("ChooseMaterialPane.Orifices");
+                }
+                DataTable {
+                    table-id: 21;
+                    data: AppState.md-orifices;
+                    vertical-stretch: 1;
+                }
+            }
+        }
+        Tab {
+            title: T.s("MakeDesignDialog.Parameters");
+            VerticalBox {
+                HorizontalLayout {
+                    spacing: 6px;
+                    alignment: end;
+                    Button {
+                        text: T.s("ParametersPane.Reset");
+                        clicked => { AppState.table-action(23, "undo"); }
+                    }
+                    Button {
+                        text: T.s("ParametersPane.Apply");
+                        primary: true;
+                        clicked => { AppState.table-action(23, "apply"); }
+                    }
+                }
+                for p[i] in AppState.md-params: HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        width: 320px;
+                        text: p.header ? p.label : "    " + p.label + ":";
+                        font-weight: p.header ? 700 : 400;
+                        vertical-alignment: center;
+                    }
+                    if !p.header: LineEdit {
+                        text: p.value;
+                        width: 160px;
+                        edited(t) => { AppState.md-param-edited(i, t); }
+                    }
+                }
+                Rectangle { vertical-stretch: 1; }
+            }
+        }
+        Tab {
+            title: T.s("MakeDesignDialog.Constraints");
+            VerticalBox {
+                GroupBox {
+                    VerticalLayout {
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: T.s("ConstraintsPane.Constraint_on");
+                                vertical-alignment: center;
+                            }
+                            ComboBox {
+                                model: AppState.md-pipes;
+                                current-index <=> AppState.md-pipe;
+                            }
+                            Text {
+                                text: ",";
+                                vertical-alignment: center;
+                            }
+                            ComboBox {
+                                model: [
+                                    T.s("ConstraintsPane.pipe(s)_must_be_greater_than"),
+                                    T.s("ConstraintsPane.pipe(s)_must_be_lower_than"),
+                                    T.s("ConstraintsPane.pipe(s)_must_be_equal_to"),
+                                    T.s("ConstraintsPane.the_two_pipes_must_be"),
+                                ];
+                                current-index <=> AppState.md-kind;
+                            }
+                        }
+                        if AppState.md-kind <= 1: HorizontalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: T.s("ConstraintsPane.diameter");
+                                vertical-alignment: center;
+                            }
+                            LineEdit {
+                                text <=> AppState.md-value;
+                            }
+                        }
+                        if AppState.md-kind == 2: HorizontalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: T.s("ConstraintsPane.diameter");
+                                vertical-alignment: center;
+                            }
+                            ComboBox {
+                                model: AppState.diameter-choices;
+                                current-index <=> AppState.md-diam1;
+                            }
+                        }
+                        if AppState.md-kind == 3: GridLayout {
+                            spacing: 6px;
+                            Row {
+                                Text {
+                                    text: T.s("ConstraintsPane.diameter_1");
+                                    vertical-alignment: center;
+                                }
+                                ComboBox {
+                                    model: AppState.diameter-choices;
+                                    current-index <=> AppState.md-diam1;
+                                }
+                                Text {
+                                    text: T.s("ConstraintsPane.length_1");
+                                    vertical-alignment: center;
+                                }
+                                LineEdit {
+                                    text <=> AppState.md-length;
+                                }
+                            }
+                            Row {
+                                Text {
+                                    text: T.s("ConstraintsPane.diameter_2");
+                                    vertical-alignment: center;
+                                }
+                                ComboBox {
+                                    model: AppState.diameter-choices;
+                                    current-index <=> AppState.md-diam2;
+                                }
+                                Text {
+                                    text: T.s("ConstraintsPane.length_2");
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+                ButtonRow {
+                    Button {
+                        text: T.s("ConstraintsPane.Add_new_constraint");
+                        clicked => { AppState.md-add-constraint(); }
+                    }
+                    Button {
+                        text: T.s("ConstraintsPane.Delete");
+                        enabled: AppState.md-constraint-selected >= 0;
+                        clicked => { AppState.md-delete-constraint(); }
+                    }
+                }
+                StandardListView {
+                    vertical-stretch: 1;
+                    model: AppState.md-constraint-items;
+                    current-item <=> AppState.md-constraint-selected;
+                }
+            }
+        }
+        Tab {
+            title: T.s("MakeDesignDialog.Load_Factors");
+            VerticalBox {
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: T.s("LoadFactorPane.Load_factors");
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Button {
+                        text: T.s("LoadFactorPane.Reset");
+                        clicked => { AppState.table-action(22, "undo"); }
+                    }
+                }
+                DataTable {
+                    table-id: 22;
+                    data: AppState.md-load-factors;
+                    vertical-stretch: 1;
+                }
+            }
+        }
+    }
+    ButtonRow {
+        Button {
+            text: T.s("MakeDesignDialog.Abort");
+            clicked => { AppState.md-abort(); }
+        }
+        Button {
+            text: T.s("MakeDesignDialog.Run_Make_Design");
+            primary: true;
+            clicked => { AppState.md-run(); }
+        }
+    }
+}
+
+export component ProgressDialog inherits Dialog {
+    title: T.s("SolverProgressDialog.In_Progress");
+    panel-width: 420px;
+    panel-height: 170px;
+    Text {
+        text: AppState.pg-status;
+    }
+    HorizontalLayout {
+        spacing: 6px;
+        ProgressIndicator {
+            progress: AppState.pg-value / 100;
+        }
+        Text {
+            text: AppState.pg-value + "%";
+            vertical-alignment: center;
+        }
+    }
+    ButtonRow {
+        alignment: center;
+        Button {
+            text: T.s("SolverProgressDialog.Close");
+            enabled: AppState.pg-value >= 100;
+            clicked => { AppState.pg-close(); }
+        }
+    }
+}
+
+export component TableDialog inherits Dialog {
+    title: AppState.td-title;
+    panel-width: 620px;
+    panel-height: 440px;
+    if AppState.td-text != "": Text {
+        text: AppState.td-text;
+        wrap: word-wrap;
+    }
+    DataTable {
+        table-id: 50;
+        data: AppState.td-table;
+        vertical-stretch: 1;
+    }
+    ButtonRow {
+        Button {
+            text: T.s("NodeTapPressureDialog.Close");
+            clicked => { AppState.td-close(); }
+        }
+    }
+}
+
+export component InfoDialog inherits Dialog {
+    title: AppState.info-title;
+    panel-width: AppState.info-about ? 760px : 440px;
+    panel-height: AppState.info-about ? 480px : 340px;
+    HorizontalLayout {
+        spacing: 12px;
+        vertical-stretch: 1;
+        if AppState.info-about: Image {
+            source: @image-url("images/logo.jpg");
+            width: 200px;
+            image-fit: contain;
+        }
+        ScrollView {
+            content-height: info-text.preferred-height + 10px;
+            info-text := Text {
+                width: parent.width - 16px;
+                x: 4px;
+                text: AppState.info-text;
+                wrap: word-wrap;
+            }
+        }
+    }
+    ButtonRow {
+        Button {
+            text: T.s("TopoStatDialog.Close");
+            clicked => { AppState.info-close(); }
+        }
+    }
+}
+
+export component QuickCheckDialog inherits Dialog {
+    title: T.s("QuickCheckDialog.Quick_Check");
+    panel-width: 460px;
+    panel-height: 400px;
+    HorizontalLayout {
+        spacing: 6px;
+        VerticalLayout {
+            spacing: 4px;
+            FormRow {
+                label: T.s("topo.seuil.name") + " :";
+                value <=> AppState.qc-threshold;
+            }
+            FormRow {
+                label: T.s("topo.faucetcoef.name") + " :";
+                value <=> AppState.qc-faucet;
+            }
+        }
+        Button {
+            text: T.s("QuickCheckDialog.Apply");
+            clicked => { AppState.qc-apply(); }
+        }
+    }
+    DataTable {
+        table-id: 51;
+        data: AppState.qc-table;
+        vertical-stretch: 1;
+    }
+    ButtonRow {
+        alignment: center;
+        Button {
+            text: T.s("QuickCheckDialog.Close");
+            clicked => { AppState.qc-close(); }
+        }
+    }
+}
+
+export component DatabaseDialog inherits Dialog {
+    title: T.s("DatabaseDialog.Materials_database");
+    panel-width: 860px;
+    panel-height: 500px;
+    TabWidget {
+        vertical-stretch: 1;
+        current-index <=> AppState.db-tab;
+        Tab {
+            title: T.s("DatabaseDialog.Diameters");
+            VerticalBox {
+                TableToolbar {
+                    table-id: 10;
+                    title: T.s("DatabaseDialog.Diameters_list");
+                    insert-key: "DatabaseDialog.Insert_a_new_diameter";
+                    delete-key: "DatabaseDialog.Delete_selected_diameter(s)";
+                    undo-key: "DatabaseDialog.Load_data";
+                    apply-key: "DatabaseDialog.Save_data";
+                    can-copy: AppState.db-diameters.can-copy;
+                    show-export: true;
+                }
+                DataTable {
+                    table-id: 10;
+                    data: AppState.db-diameters;
+                    vertical-stretch: 1;
+                }
+            }
+        }
+        Tab {
+            title: T.s("DatabaseDialog.Orifices");
+            VerticalBox {
+                TableToolbar {
+                    table-id: 11;
+                    title: T.s("DatabaseDialog.<html>Orifices_list");
+                    insert-key: "DatabaseDialog.Insert_a_new_orifice";
+                    delete-key: "DatabaseDialog.Delete_selected_orifice(s)";
+                    undo-key: "DatabaseDialog.Load_data";
+                    apply-key: "DatabaseDialog.Save_data";
+                    can-copy: AppState.db-orifices.can-copy;
+                    show-export: true;
+                }
+                DataTable {
+                    table-id: 11;
+                    data: AppState.db-orifices;
+                    vertical-stretch: 1;
+                }
+            }
+        }
+    }
+    ButtonRow {
+        Button {
+            text: T.s("DatabaseDialog.Close");
+            clicked => { AppState.db-close(); }
+        }
+    }
+}
+
+export component NewSimulationDialog inherits Dialog {
+    title: T.s("NewSimuDialog.Simulation_parameters");
+    panel-width: 460px;
+    panel-height: 420px;
+    FormRow {
+        label: T.s("simu.nbsim.name") + ":";
+        value <=> AppState.ns-nbsim;
+    }
+    FormRow {
+        label: T.s("simu.simopentaps.name") + ":";
+        value <=> AppState.ns-opentaps;
+    }
+    Text {
+        text: T.s("NewSimuDialog.critical_flows");
+    }
+    FormRow {
+        label: "      " + T.s("simu.mincriticalflow.name") + ":";
+        value <=> AppState.ns-low;
+    }
+    FormRow {
+        label: "      " + T.s("simu.maxcriticalflow.name") + ":";
+        value <=> AppState.ns-high;
+    }
+    FormRow {
+        label: T.s("simu.targetflow.name") + ":";
+        value <=> AppState.ns-target;
+    }
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            width: 200px;
+            text: T.s("simu.typeorifice.name") + ":";
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: [T.s("NewSimuDialog.ideal"), T.s("NewSimuDialog.commercial")];
+            current-index <=> AppState.ns-orifice;
+        }
+    }
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            width: 200px;
+            text: T.s("simu.typesimu.name") + ":";
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: [
+                T.s("NewSimuDialog.monte-carlo_sampling"),
+                T.s("NewSimuDialog.individual_faucets"),
+                T.s("NewSimuDialog.user-defined"),
+            ];
+            current-index <=> AppState.ns-type;
+        }
+    }
+    Rectangle { vertical-stretch: 1; }
+    ButtonRow {
+        Button {
+            text: T.s("NewSimuDialog.Close");
+            clicked => { AppState.ns-close(); }
+        }
+        Button {
+            text: T.s("NewSimuDialog.Run_Simulation...");
+            primary: true;
+            clicked => { AppState.ns-run(); }
+        }
+    }
+}
+
+export component FaucetSelectionDialog inherits Dialog {
+    title: T.s("TapSelectionDialog.Faucets_selection");
+    panel-width: 340px;
+    panel-height: 420px;
+    SelectButtons {
+        table-id: 30;
+    }
+    DataTable {
+        table-id: 30;
+        data: AppState.ts-table;
+        vertical-stretch: 1;
+    }
+    ButtonRow {
+        Button {
+            text: T.s("TapSelectionDialog.OK");
+            primary: true;
+            clicked => { AppState.ts-ok(); }
+        }
+    }
+}

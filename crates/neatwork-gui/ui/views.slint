@@ -1,0 +1,255 @@
+// Tree view (Java TreeNetwork) and network drawing (new in the Rust version).
+import { ScrollView, LineEdit, Button, ComboBox, Slider } from "std-widgets.slint";
+import { AppState, T, TreeCell, DrawNode, DrawEdge, LegendItem } from "state.slint";
+
+component TreeCellView inherits Rectangle {
+    in property <TreeCell> cell;
+    property <length> mid-x: self.width / 2;
+    property <length> mid-y: self.height / 2;
+    if cell.highlight: Rectangle {
+        background: #18d8f9;
+        border-radius: self.height / 2;
+    }
+    // vertical line (I and T)
+    if cell.kind == 2 || cell.kind == 3: Rectangle {
+        x: root.mid-x - 1px;
+        width: 2px;
+        background: black;
+    }
+    // elbow (L and T): down from the top to the middle, then right
+    if cell.kind == 1 || cell.kind == 3: Rectangle {
+        x: root.mid-x - 1px;
+        y: 0;
+        width: 2px;
+        height: root.mid-y + 1px;
+        background: black;
+    }
+    if cell.kind == 1 || cell.kind == 3: Rectangle {
+        x: root.mid-x - 1px;
+        y: root.mid-y - 1px;
+        width: root.width - root.mid-x + 1px;
+        height: 2px;
+        background: black;
+    }
+    if cell.kind == 0: Rectangle {
+        // stub: tank to the right, branching across, faucet from the left
+        Rectangle {
+            x: cell.node-type == 2 ? 0 : cell.node-type == 0 ? root.mid-x : 0;
+            width: cell.node-type == 1 ? root.width : root.mid-x;
+            y: root.mid-y - 1px;
+            height: 2px;
+            background: black;
+        }
+        Rectangle {
+            width: min(root.width - 4px, label.preferred-width + 10px);
+            height: root.height - 4px;
+            background: cell.node-type == 0 ? #23d12f : cell.node-type == 1 ? #c8c8c8 : #2fb1d1;
+            border-width: 1px;
+            border-color: black;
+            label := Text {
+                text: cell.label;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+        TouchArea {
+            clicked => { AppState.tree-clicked(cell.row, cell.col); }
+        }
+    }
+}
+
+export component TreeView inherits VerticalLayout {
+    property <length> cell-w: 90px;
+    property <length> cell-h: 30px;
+    spacing: 4px;
+    HorizontalLayout {
+        spacing: 4px;
+        Text {
+            text: T.s("TreePane.Node_Search");
+            vertical-alignment: center;
+        }
+        search := LineEdit {
+            accepted(t) => {
+                if (t != "") {
+                    AppState.tree-search(t);
+                }
+            }
+        }
+        Button {
+            text: T.s("TreePane.Go");
+            clicked => {
+                if (search.text != "") {
+                    AppState.tree-search(search.text);
+                }
+            }
+        }
+    }
+    Rectangle {
+        border-width: 1px;
+        border-color: #999;
+        background: white;
+        if AppState.tree-message != "": Text {
+            text: AppState.tree-message;
+        }
+        sv := ScrollView {
+            content-width: AppState.tree-cols * root.cell-w;
+            content-height: AppState.tree-rows * root.cell-h;
+            for cell in AppState.tree-cells: TreeCellView {
+                x: cell.col * root.cell-w;
+                y: cell.row * root.cell-h;
+                width: root.cell-w;
+                height: root.cell-h;
+                cell: cell;
+            }
+        }
+        property <int> focus-serial: AppState.tree-focus-serial;
+        changed focus-serial => {
+            if (AppState.tree-focus-row >= 0) {
+                sv.content-x = -max(0px, min(AppState.tree-focus-col * root.cell-w - sv.visible-width / 2, sv.content-width - sv.visible-width));
+                sv.content-y = -max(0px, min(AppState.tree-focus-row * root.cell-h - sv.visible-height / 2, sv.content-height - sv.visible-height));
+            }
+        }
+    }
+}
+
+// Drawing of the network. The Rust code gives world coordinates in
+// [0, net-width] x [0, net-height]; the view scales them by the zoom.
+export component NetworkView inherits HorizontalLayout {
+    property <float> scale: AppState.net-zoom;
+    property <length> margin: 40px;
+    // zoom that shows the whole network
+    pure function fit-zoom() -> float {
+        return clamp(min((sv.visible-width - 2 * root.margin) / (AppState.net-width * 1px),
+                         (sv.visible-height - 2 * root.margin) / (AppState.net-height * 1px)), 0.05, 5);
+    }
+    property <float> world-size: AppState.net-width * 100000 + AppState.net-height;
+    changed world-size => { AppState.net-zoom = root.fit-zoom(); }
+    init => { AppState.net-zoom = root.fit-zoom(); }
+    spacing: 6px;
+    VerticalLayout {
+        spacing: 4px;
+        HorizontalLayout {
+            spacing: 6px;
+            Text {
+                text: T.s("Gui.Layout");
+                vertical-alignment: center;
+            }
+            ComboBox {
+                model: [T.s("Gui.Layout_tree"), T.s("Gui.Layout_profile"), T.s("Gui.Layout_coordinates")];
+                current-index <=> AppState.net-layout;
+                selected => { AppState.net-view-changed(); }
+            }
+            Text {
+                text: T.s("Gui.Color");
+                vertical-alignment: center;
+            }
+            ComboBox {
+                model: AppState.net-colorings;
+                current-index <=> AppState.net-coloring;
+                selected => { AppState.net-view-changed(); }
+            }
+            Text {
+                text: T.s("Gui.Zoom");
+                vertical-alignment: center;
+            }
+            Slider {
+                minimum: 0.05;
+                maximum: 5;
+                value <=> AppState.net-zoom;
+                width: 160px;
+            }
+            Button {
+                text: T.s("Gui.Fit");
+                clicked => { AppState.net-zoom = root.fit-zoom(); }
+            }
+            Button {
+                text: "1:1";
+                clicked => { AppState.net-zoom = 1; }
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+        Rectangle {
+            border-width: 1px;
+            border-color: #999;
+            background: white;
+            sv := ScrollView {
+                content-width: AppState.net-width * 1px * root.scale + 2 * root.margin;
+                content-height: AppState.net-height * 1px * root.scale + 2 * root.margin;
+                TouchArea {
+                    scroll-event(ev) => {
+                        if (ev.modifiers.control) {
+                            AppState.net-zoom = clamp(AppState.net-zoom * (ev.delta-y > 0 ? 1.15 : 1 / 1.15), 0.05, 5);
+                            return accept;
+                        }
+                        return reject;
+                    }
+                }
+                for e in AppState.net-edges: Path {
+                    x: root.margin;
+                    y: root.margin;
+                    width: AppState.net-width * 1px * root.scale;
+                    height: AppState.net-height * 1px * root.scale;
+                    viewbox-x: 0;
+                    viewbox-y: 0;
+                    viewbox-width: AppState.net-width;
+                    viewbox-height: AppState.net-height;
+                    stroke: e.highlight ? #d000d0 : e.color;
+                    stroke-width: e.width * 1px * (e.highlight ? 1.8 : 1);
+                    MoveTo { x: e.x1; y: e.y1; }
+                    LineTo { x: e.x2; y: e.y2; }
+                }
+                for n[i] in AppState.net-nodes: Rectangle {
+                    property <length> r: n.radius * 1px * (n.highlight ? 1.5 : 1);
+                    x: root.margin + n.x * 1px * root.scale - self.r;
+                    y: root.margin + n.y * 1px * root.scale - self.r;
+                    width: 2 * self.r;
+                    height: 2 * self.r;
+                    border-radius: self.r;
+                    background: n.color;
+                    border-width: n.highlight ? 2px : 1px;
+                    border-color: n.highlight ? #d000d0 : #333333;
+                    Text {
+                        x: parent.width + 2px;
+                        y: -12px;
+                        text: n.label;
+                        font-size: 11px;
+                        color: #222222;
+                    }
+                    TouchArea {
+                        clicked => { AppState.net-node-clicked(i); }
+                    }
+                }
+            }
+        }
+    }
+    VerticalLayout {
+        width: 220px;
+        spacing: 4px;
+        Text {
+            text: T.s("Gui.Legend");
+            font-weight: 700;
+        }
+        for item in AppState.net-legend: HorizontalLayout {
+            spacing: 6px;
+            Rectangle {
+                width: 14px;
+                height: 14px;
+                background: item.color;
+                border-width: 1px;
+                border-color: #333;
+            }
+            Text {
+                text: item.label;
+                vertical-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+        Rectangle { height: 8px; }
+        Text {
+            text: AppState.net-info;
+            wrap: word-wrap;
+        }
+        Rectangle { vertical-stretch: 1; }
+    }
+}

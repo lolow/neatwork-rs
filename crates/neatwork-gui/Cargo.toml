@@ -1,0 +1,30 @@
+[package]
+name = "neatwork-gui"
+description = "Desktop interface of NeatWork (Slint)"
+version.workspace = true
+edition.workspace = true
+rust-version = "1.95"
+build = "build.rs"
+
+[[bin]]
+name = "neatwork-gui"
+path = "src/main.rs"
+
+[dependencies]
+neatwork-core = { path = "../neatwork-core" }
+slint = "1.19.0"
+rfd = "0.18.0"
+arboard = "3.7.0"
+
+[build-dependencies]
+slint-build = "1.19.0"
+
+# Same lints as the workspace, but `deny` instead of `forbid` for unsafe code:
+# the code that Slint generates allows unsafe code locally. This crate's own
+# code has no unsafe block.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"

@@ -6,7 +6,7 @@ The port reads and writes the same project files as the Java program. On the sam
 
 ## What the port contains
 
-The Java program has a Swing user interface and an engine. This port contains the engine and a command line interface. It does not contain the user interface.
+The Java program has a Swing user interface and an engine. This port contains the engine, a command line interface, and a desktop interface made with Slint. The desktop interface rebuilds the Java windows and adds a drawing of the network (see [docs/gui.md](docs/gui.md)).
 
 The engine does two operations:
 
@@ -47,12 +47,19 @@ neatwork simulate El_Bihajua.dsg --type random --nbsim 100 --opentaps 0.4 --seed
 
 The full list of commands and options is in [docs/cli.md](docs/cli.md).
 
+Start the desktop interface (Rust 1.95 or later):
+
+```sh
+cargo run --release -p neatwork-gui -- reference/neatwork2024/sample_projects/El_Bihajua.dsg
+```
+
 ## Repository layout
 
 | Path | Content |
 | --- | --- |
 | `crates/neatwork-core` | The engine library: file parsing, design, simulation, Java compatibility layer. |
 | `crates/neatwork-cli` | The `neatwork` command line program and the replay test. |
+| `crates/neatwork-gui` | The `neatwork-gui` desktop interface (Slint). |
 | `reference/neatwork2024` | A copy of the Java sources and sample projects (commit in `SOURCE_COMMIT`). It is the reference for the port. |
 | `reference/harness` | A headless driver for the Java engine and its build script. |
 | `rust/` | Port records: decisions, glossary, map, recorded test cases. |
@@ -61,6 +68,7 @@ The full list of commands and options is in [docs/cli.md](docs/cli.md).
 ## Documentation
 
 - [docs/cli.md](docs/cli.md): commands and options.
+- [docs/gui.md](docs/gui.md): the desktop interface.
 - [docs/file-formats.md](docs/file-formats.md): the `.tpo`, `.dsg`, `.sim` and catalog files.
 - [docs/architecture.md](docs/architecture.md): modules and how they map to the Java classes.
 - [docs/equivalence.md](docs/equivalence.md): how the port is compared with the Java engine, and the results.

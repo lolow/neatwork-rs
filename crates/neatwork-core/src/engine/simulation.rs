@@ -86,6 +86,7 @@ impl MakeSimulation {
         faucet_ref: &HashMap<String, bool>,
         rng: &mut dyn Uniform,
         locale: Locale,
+        progress: &mut dyn FnMut(i32),
     ) -> Result<MakeSimulation> {
         let type_orifice = p.get_property_or("simu.typeorifice.value", "ideal");
         let type_s = p.get_property_or("simu.typesimu.value", "random");
@@ -133,6 +134,7 @@ impl MakeSimulation {
                 net.pipes.initialize_simulation(nb_sim);
                 net.nodes.initialize_simulation(nb_sim);
                 for i in 0..nb_sim {
+                    progress((i as f32 / nb_sim as f32 * 100.0).round() as i32);
                     run_simulation(
                         &mut big_f,
                         &mut net,
@@ -140,6 +142,7 @@ impl MakeSimulation {
                         SimulationType::Random,
                         i,
                         rng,
+                        progress,
                     )?;
                 }
             }
@@ -153,6 +156,7 @@ impl MakeSimulation {
                     SimulationType::TapByTap,
                     0,
                     rng,
+                    progress,
                 )?;
             }
             Some(SimulationType::Handmade) => {
@@ -161,6 +165,7 @@ impl MakeSimulation {
                 }
                 net.pipes.initialize_simulation(1);
                 net.nodes.initialize_simulation(1);
+                progress(50);
                 run_simulation(
                     &mut big_f,
                     &mut net,
@@ -168,6 +173,7 @@ impl MakeSimulation {
                     SimulationType::Handmade,
                     0,
                     rng,
+                    progress,
                 )?;
             }
             None => {}
@@ -379,6 +385,7 @@ fn run_simulation(
     operation: SimulationType,
     index: usize,
     rng: &mut dyn Uniform,
+    progress: &mut dyn FnMut(i32),
 ) -> Result<()> {
     let to_init = sort_node_names(net)?;
     let result = (|| -> Result<()> {
@@ -401,6 +408,7 @@ fn run_simulation(
             }
             SimulationType::TapByTap => {
                 for i in 0..net.taps.len() {
+                    progress((i as f32 / net.taps.len() as f32 * 100.0).round() as i32);
                     net.taps[i].open = true;
                     let sub = do_sub_reseau(net, vec![i]);
                     let y = solve_sub(big_f, net, &sub, prm)?;
