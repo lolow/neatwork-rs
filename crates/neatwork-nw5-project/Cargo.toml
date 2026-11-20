@@ -1,0 +1,17 @@
+[package]
+name = "neatwork-nw5-project"
+description = "NeatWork 5 projects: revisions, graph state, runs, review and comparison (non-GUI logic of the NW5 interface)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+neatwork-nw5 = { path = "../neatwork-nw5" }
+neatwork-nw5-io = { path = "../neatwork-nw5-io" }
+neatwork-nw5-sim = { path = "../neatwork-nw5-sim" }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+neatwork-nw5-design = { path = "../neatwork-nw5-design" }

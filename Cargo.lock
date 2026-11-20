@@ -2938,6 +2938,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "neatwork-nw5-project"
+version = "0.1.0"
+dependencies = [
+ "neatwork-nw5",
+ "neatwork-nw5-design",
+ "neatwork-nw5-io",
+ "neatwork-nw5-sim",
+]
+
+[[package]]
 name = "neatwork-nw5-sim"
 version = "0.1.0"
 dependencies = [

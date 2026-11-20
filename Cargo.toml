@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/neatwork-core", "crates/neatwork-nw5", "crates/neatwork-nw5-io", "crates/neatwork-nw5-sim", "crates/neatwork-nw5-design", "crates/neatwork-cli", "crates/neatwork-gui"]
+members = ["crates/neatwork-core", "crates/neatwork-nw5", "crates/neatwork-nw5-io", "crates/neatwork-nw5-sim", "crates/neatwork-nw5-design", "crates/neatwork-nw5-project", "crates/neatwork-cli", "crates/neatwork-gui"]
 
 [workspace.package]
 version = "0.1.0"
