@@ -6,6 +6,7 @@ rust-version.workspace = true
 
 [dependencies]
 neatwork-nw5 = { path = "../neatwork-nw5" }
+highs = "2.4.0"
 
 [lints]
 workspace = true
