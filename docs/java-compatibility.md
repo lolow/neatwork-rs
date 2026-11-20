@@ -12,7 +12,7 @@ The port gives the same output as the Java engine, including where the Java code
 6. Speeds use 3.14 for pi.
 7. The design step adds the orifices `1.0E-6` and `1.0` to the orifice list, and the `.dsg` file keeps them.
 8. A failed linear program gives a design with zero lengths and no error. If MOSEK reports no optimal status, the Java code does not read the solution and continues with zeros.
-9. The quantile table of `calculQuartile` sorts the runs with a special rule that moves zero flows to the end.
+9. The quantile table of `calculQuartile` sorts the runs with a special rule that moves zero flows to the end. The port gets the same order with a faster sort (the Java bubble sort takes time in proportion to the square of the run count).
 
 ## Java runtime behavior
 

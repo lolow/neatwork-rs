@@ -741,17 +741,17 @@ fn calcul_quartile(net: &mut CoreNetwork) {
     for k in np.saturating_sub(nt)..np {
         let p = &mut net.pipes.0[k];
         let mut simu = p.simulation.clone();
-        let mut sorted = false;
-        while !sorted {
-            sorted = true;
-            for i in 0..simu.len().saturating_sub(1) {
-                if (simu[i] > simu[i + 1] && simu[i + 1] != 0.0)
-                    || (simu[i] < simu[i + 1] && simu[i] == 0.0)
-                {
-                    sorted = false;
-                    simu.swap(i, i + 1);
-                }
-            }
+        if simu.iter().any(|v| v.is_nan()) {
+            bubble_sort_zeros_last(&mut simu);
+        } else {
+            // Same result as the Java bubble sort, in O(n log n): the bubble
+            // sort ends with the non-zero values ascending and the zeros
+            // last, in their first order (it never swaps two zeros).
+            simu.sort_by(|a, b| {
+                (*a == 0.0)
+                    .cmp(&(*b == 0.0))
+                    .then(a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            });
         }
         let failure = usize::try_from(p.failure).unwrap_or(0);
         let mut i = simu.len() as isize - 1;
@@ -772,6 +772,22 @@ fn calcul_quartile(net: &mut CoreNetwork) {
         p.quart50 = q(0.5);
         p.quart75 = q(0.75);
         p.quart90 = q(0.9);
+    }
+}
+
+/// The bubble sort of `calculQuartile`, kept for runs with NaN values.
+fn bubble_sort_zeros_last(simu: &mut [f64]) {
+    let mut sorted = false;
+    while !sorted {
+        sorted = true;
+        for i in 0..simu.len().saturating_sub(1) {
+            if (simu[i] > simu[i + 1] && simu[i + 1] != 0.0)
+                || (simu[i] < simu[i + 1] && simu[i] == 0.0)
+            {
+                sorted = false;
+                simu.swap(i, i + 1);
+            }
+        }
     }
 }
 
@@ -799,4 +815,40 @@ fn calcul_stat_pressure(net: &mut CoreNetwork) -> Result<()> {
         n.averpress /= n.pressim.len() as f64;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod sort_tests {
+    use super::*;
+
+    #[test]
+    fn fast_sort_equals_bubble_sort() {
+        let mut rng = SplitMix64(9);
+        for n in [0, 1, 2, 5, 50, 400] {
+            let v: Vec<f64> = (0..n)
+                .map(|_| {
+                    let x = rng.next_f64();
+                    if x < 0.3 {
+                        0.0
+                    } else if x < 0.4 {
+                        -0.0
+                    } else {
+                        (x * 10.0).floor() / 10.0
+                    }
+                })
+                .collect();
+            let mut a = v.clone();
+            bubble_sort_zeros_last(&mut a);
+            let mut b = v.clone();
+            b.sort_by(|x, y| {
+                (*x == 0.0)
+                    .cmp(&(*y == 0.0))
+                    .then(x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal))
+            });
+            assert_eq!(
+                a.iter().map(|x| x.to_bits()).collect::<Vec<_>>(),
+                b.iter().map(|x| x.to_bits()).collect::<Vec<_>>()
+            );
+        }
+    }
 }
