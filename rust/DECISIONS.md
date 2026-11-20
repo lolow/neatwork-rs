@@ -200,3 +200,22 @@ Decision: The port implements the VaR load factors (default) and the CVaR load f
 Status: accepted (2026-11-20)
 
 Decision: The interface keeps a NW5 project in a folder: revisions `<name>_v<N>.tpo` or `.dsg`, `project.json`, `graph.json` (node positions and valve states), and one `runs/<NNNN>.json` per simulation run. A single `.tpo` or `.dsg` file still opens without a folder.
+
+## ADR-025: Defaults for the open questions of the NW5 interface
+
+Status: accepted (2026-11-20), open to review by the NW5 product owner
+
+Context: `rust/nw5/specs/app.md` section 15 lists ten questions for the product owner. The port needs an answer to go on. Each default below follows the recommendation of the specification (section 13) and can change later.
+
+Decision:
+
+1. Engine (Q1): the interface runs the Rust port of the NW5 simulation (`neatwork-nw5-sim`).
+2. Revision names (Q2): a save to an existing file name is refused with a message.
+3. History, details and run deletion (Q3, D2): shown, as a run list in the Simulation tab.
+4. Runs (Q4): one run at a time, in a background thread that can be cancelled.
+5. Active revision (Q5): the user can choose an older revision as the active input.
+6. Demand group panel (Q6, D10): not built.
+7. Node positions and valve states (Q7, D11): kept in `graph.json`, matched by node ID and arc ID, and kept across revisions.
+8. NW5 files (Q8): they open in the NW5 workspace. NW4 projects keep the NW2024 windows.
+9. "Default input" comparison source (Q9): not built.
+10. Export (Q10): statistics JSON, and the revision as `.tpo`, `.dsg`, NW-json or `.inp`. XLSX is not built.

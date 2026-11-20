@@ -1,8 +1,11 @@
 # NeatWork in Rust
 
-This repository holds a Rust port of the engine of NeatWork 2024. NeatWork designs gravity-driven water distribution networks for rural areas. APLV (Agua Para La Vida) and Logilab (University of Geneva) wrote the original program in Java.
+This repository holds a Rust port of NeatWork. NeatWork designs gravity-driven water distribution networks for rural areas. APLV (Agua Para La Vida) and Logilab (University of Geneva) wrote the original program in Java.
 
-The port reads and writes the same project files as the Java program. On the sample projects, its output files are byte-identical to the output of the Java engine.
+The port has two engines:
+
+- NeatWork 5 (NW5), the default. It ports the MATLAB design and the Python simulation of NeatWork 5 (`APLV-F/neatwork5-mat-2`). NW5 adds clients with their own opening probability and target flow, a required pressure per terminal, bounded flows, and design loads by value at risk (VaR) or conditional value at risk (CVaR).
+- NeatWork 4 (NW4), the engine of NeatWork 2024. It reads and writes the same project files as the Java program. On the sample projects, its output files are byte-identical to the output of the Java engine.
 
 ## What the port contains
 
@@ -60,22 +63,29 @@ As the Java program, the interface uses the folder where it starts. It keeps the
 
 ## Use
 
-Make a design from a topography:
+Make a NW5 design from a topography. The pipe and orifice catalogs come from the folder of the topography:
 
 ```sh
-neatwork design reference/neatwork2024/sample_projects/El_Bihajua.tpo -o El_Bihajua.dsg
+neatwork design "reference/neatwork5/examples/tpo_examples/Ceiba/Ceiba.tpo" -o Ceiba.dsg
 ```
 
-Simulate the design with each tap open alone:
+Run 1,000 random scenarios on the design and write the statistics as JSON:
 
 ```sh
-neatwork simulate El_Bihajua.dsg --type tapbytap -o El_Bihajua.0.sim
+neatwork simulate Ceiba.dsg --nbsim 1000 --seed 1 -o Ceiba.sim.json
 ```
 
-Run 100 random simulations where each tap is open with probability 0.4:
+Convert a network to EPANET:
 
 ```sh
-neatwork simulate El_Bihajua.dsg --type random --nbsim 100 --opentaps 0.4 --seed 1
+neatwork convert Ceiba.dsg -o Ceiba.inp
+```
+
+With the NW4 engine, make a design and simulate it with each tap open alone:
+
+```sh
+neatwork --engine nw4 design reference/neatwork2024/sample_projects/El_Bihajua.tpo -o El_Bihajua.dsg
+neatwork --engine nw4 simulate El_Bihajua.dsg --type tapbytap -o El_Bihajua.0.sim
 ```
 
 The full list of commands and options is in [docs/cli.md](docs/cli.md).
@@ -86,7 +96,7 @@ Start the desktop interface (Rust 1.95 or later):
 cargo run --release -p neatwork-gui -- reference/neatwork2024/sample_projects/El_Bihajua.dsg
 ```
 
-## Speed
+## Speed of the NW4 engine
 
 The table compares the Java engine of NeatWork 2024 with the Rust port on the sample project El_Bihajua (56 nodes, 23 taps). Each value is the mean of 10 runs with [hyperfine](https://github.com/sharkdp/hyperfine), measured on 2026-11-20.
 
@@ -112,11 +122,17 @@ Conditions:
 
 | Path | Content |
 | --- | --- |
-| `crates/neatwork-core` | The engine library: file parsing, design, simulation, Java compatibility layer. |
+| `crates/neatwork-core` | The NW4 engine library: file parsing, design, simulation, Java compatibility layer. |
+| `crates/neatwork-nw5` | The NW5 network model and file readers. |
+| `crates/neatwork-nw5-io` | NW5 writers and converters: `.tpo`, `.dsg`, JSON, EPANET, Txt folders, NW4 upgrade. |
+| `crates/neatwork-nw5-sim` | The NW5 simulation (interior-point solver, random scenarios, statistics). |
+| `crates/neatwork-nw5-design` | The NW5 design (VaR and CVaR loads, linear program, post-processing). |
 | `crates/neatwork-cli` | The `neatwork` command line program and the replay test. |
 | `crates/neatwork-gui` | The `neatwork-gui` desktop interface (Slint). |
 | `reference/neatwork2024` | A copy of the Java sources and sample projects (commit in `SOURCE_COMMIT`). It is the reference for the port. |
 | `reference/harness` | A headless driver for the Java engine and its build script. |
+| `reference/neatwork5` | A copy of the NeatWork 5 sources and examples (commit in `SOURCE_COMMIT`). |
+| `reference/harness-nw5` | Scripts that run the NW5 Python simulation and the reference outputs. |
 | `rust/` | Port records: decisions, glossary, map, recorded test cases. |
 | `docs/` | Documentation of the port. |
 
@@ -136,7 +152,9 @@ Conditions:
 cargo test
 ```
 
-The test suite contains unit tests and a replay of 16 cases recorded from the Java engine. For each case, every output file must be byte-identical to the Java output.
+The test suite contains unit tests and a replay of 16 cases recorded from the Java engine. For each case, every output file of `--engine nw4` must be byte-identical to the Java output.
+
+The NW5 simulation must equal the reference outputs of the NW5 Python simulation within a relative tolerance of 1e-8 and an absolute tolerance of 1e-10. Because those references come from the Python code itself, the simulation also has tests that do not use them: small networks solved by hand, flow balance and head-loss residuals. The NW5 design must give the expected values of the MATLAB tests.
 
 ## License
 
