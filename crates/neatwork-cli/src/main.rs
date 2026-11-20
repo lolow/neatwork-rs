@@ -237,6 +237,11 @@ fn run(cli: Cli) -> Result<(), String> {
             params,
         } => {
             if cli.engine == Engine::Nw5 {
+                if lp_dump.is_some() || lp_solution_out.is_some() || lp_solution.is_some() {
+                    return Err(
+                        "--lp-dump, --lp-solution-out and --lp-solution need --engine nw4".into(),
+                    );
+                }
                 return nw5::design(
                     &input,
                     output.as_deref(),

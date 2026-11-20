@@ -1,5 +1,6 @@
 //! NeatWork 5 commands of the command line.
 
+use neatwork_core::project::design::{DEFAULT_DIAMETERS, DEFAULT_ORIFICES};
 use std::path::Path;
 
 use neatwork_nw5::Network;
@@ -91,7 +92,7 @@ pub fn read_any(input: &Path, o: &ConvertOptions) -> Result<Read, String> {
 /// Catalogues of a `.tpo` without `!Diameters` or `!Orifices`, as MATLAB
 /// finds them: explicit files, else `DiamBase<file>.db`,
 /// `DiamBase<folder>.db` or `diameters.db`, and `orifices.db`, next to the
-/// input.
+/// input. The last fallback is the catalog shipped with NeatWork 2024.
 pub fn complete_catalogues(
     net: &mut Network,
     input: &Path,
@@ -116,6 +117,12 @@ pub fn complete_catalogues(
             net.pipes =
                 neatwork_nw5::read::read_diameters_db(&text(p)?).map_err(|e| e.to_string())?;
             eprintln!("diameters: {}", p.display());
+        } else if let Some(p) = diameters {
+            return Err(format!("cannot read {}: no such file", p.display()));
+        } else {
+            net.pipes = neatwork_nw5::read::read_diameters_db(DEFAULT_DIAMETERS)
+                .map_err(|e| e.to_string())?;
+            eprintln!("diameters: NeatWork 2024 shipped catalog");
         }
     }
     if net.orifices.is_empty() || orifices.is_some() {
@@ -123,6 +130,11 @@ pub fn complete_catalogues(
         if p.is_file() {
             net.orifices = neatwork_nw5::read::read_orifices_db(&text(&p)?);
             eprintln!("orifices: {}", p.display());
+        } else if orifices.is_some() {
+            return Err(format!("cannot read {}: no such file", p.display()));
+        } else {
+            net.orifices = neatwork_nw5::read::read_orifices_db(DEFAULT_ORIFICES);
+            eprintln!("orifices: NeatWork 2024 shipped catalog");
         }
     }
     Ok(())
