@@ -1,0 +1,11 @@
+# Python packages for the NW5 reference runs (python-core simulation).
+# scikit-sparse (CHOLMOD) is replaced by the stand-in in shim/sksparse:
+# put shim/ first on PYTHONPATH.
+numpy
+scipy
+pandas>=2.2,<3
+pydantic>=2.8.0
+fastapi>=0.115.0
+openpyxl
+tqdm
+highspy

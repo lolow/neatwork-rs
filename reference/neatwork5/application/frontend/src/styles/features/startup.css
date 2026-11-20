@@ -1,0 +1,210 @@
+/* =========================================================
+   STARTUP SCREEN
+   ========================================================= */
+
+.start-screen {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+
+    position: relative;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #06101e 0%, #071425 50%, #081428 100%);
+    isolation: isolate;
+}
+
+/* ---------------------------------------------------------
+   Background
+   --------------------------------------------------------- */
+
+.start-screen__background {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.start-screen__background::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(14, 165, 233, 0.20), transparent 48%),
+        linear-gradient(180deg, rgba(6, 16, 30, 0), rgba(2, 132, 199, 0.035));
+}
+
+/* ---------------------------------------------------------
+   Ambient water glows
+   --------------------------------------------------------- */
+
+.start-screen__glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.34;
+}
+
+.start-screen__glow--one {
+    width: 500px;
+    height: 500px;
+    top: -240px;
+    left: -150px;
+    background: rgba(14, 165, 233, 0.48);
+}
+
+.start-screen__glow--two {
+    width: 620px;
+    height: 620px;
+    right: -300px;
+    bottom: -310px;
+    background: rgba(37, 99, 235, 0.32);
+}
+
+/* ---------------------------------------------------------
+   Brand
+   --------------------------------------------------------- */
+
+.start-screen__brand {
+    position: absolute;
+    top: 28px;
+    left: 32px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.start-screen__brand-mark {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    border-radius: 12px;
+    background: rgba(14, 165, 233, 0.10);
+    color: var(--color-accent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 28px rgba(0, 0, 0, 0.20);
+}
+
+.start-screen__brand-mark svg {
+    width: 23px;
+    height: 23px;
+}
+
+.start-screen__brand-name {
+    color: var(--color-text-strong);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------
+   Main content
+   --------------------------------------------------------- */
+
+.start-screen__hero {
+    width: min(720px, calc(100% - 48px));
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(-2vh);
+}
+
+.start-screen__eyebrow {
+    margin: 0 0 16px;
+    color: var(--color-accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.start-screen__title {
+    margin: 0;
+    color: var(--color-text-strong);
+    font-size: clamp(58px, 8vw, 102px);
+    font-weight: 750;
+    line-height: 0.95;
+    letter-spacing: -0.065em;
+}
+
+.start-screen__description {
+    max-width: 580px;
+    margin: 28px 0 38px;
+    color: var(--color-muted-strong);
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1.65;
+}
+
+/* ---------------------------------------------------------
+   Start button
+   --------------------------------------------------------- */
+
+.start-screen__button {
+    min-width: 158px;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 26px;
+    border: 1px solid rgba(125, 211, 252, 0.45);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.94), rgba(37, 99, 235, 0.94));
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: 0 15px 36px rgba(14, 165, 233, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+
+.start-screen__button svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 180ms ease;
+}
+
+
+.start-screen__button:hover {
+    transform: translateY(-2px);
+    border-color: rgba(186, 230, 253, 0.78);
+    box-shadow: 0 20px 48px rgba(14, 165, 233, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+
+.start-screen__button:hover svg {
+    transform: translateX(3px);
+}
+
+
+.start-screen__button:active {
+    transform: translateY(0);
+}
+
+.start-screen__button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+}
+
+/* ---------------------------------------------------------
+   Footer
+   --------------------------------------------------------- */
+
+.start-screen__footer {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--color-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}

@@ -1,0 +1,635 @@
+/* Desktop app responsive rules */
+
+@media (max-width: 1280px) {
+    :root {
+        --app-padding: 10px;
+        --app-gap: 10px;
+
+        --header-height: 54px;
+        --simulation-bar-height: 40px;
+        --tabs-height: 32px;
+        --dock-height: 220px;
+
+        --text-xs: 10px;
+        --text-sm: 11px;
+        --text-md: 12px;
+        --text-base: 12px;
+        --text-lg: 15px;
+        --text-xl: 19px;
+    }
+
+    .top-bar {
+        gap: 12px;
+    }
+
+    .top-bar h1 {
+        font-size: var(--text-xl);
+    }
+
+    .status-row {
+        grid-template-columns: repeat(2, 78px);
+        gap: 8px;
+    }
+
+    .status-card {
+        min-height: 48px;
+        padding: 8px 10px;
+    }
+
+    .simulation-bar {
+        min-height: var(--simulation-bar-height);
+        padding: 6px 8px;
+        gap: 8px;
+    }
+
+    .network-toolbar {
+        min-height: 44px;
+        padding: 8px 12px;
+    }
+
+    .network-toolbar h2 {
+        font-size: var(--text-lg);
+    }
+
+    .network-toolbar p {
+        font-size: var(--text-sm);
+    }
+
+    .control-dock {
+        gap: 10px;
+    }
+
+    .project-sidebar,
+    .artifact-panel,
+    .domain-import-panel,
+    .network-inspector {
+        padding: 11px;
+    }
+
+    .canvas-overlay-controls {
+        top: 10px;
+        right: 10px;
+        transform: scale(0.92);
+        transform-origin: top right;
+    }
+}
+
+@media (max-width: 1100px) {
+
+    .comparison-unified-controls {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .comparison-dialog {
+        width:
+            calc(100vw - 20px);
+
+        height:
+            calc(100dvh - 20px);
+    }
+}
+
+@media (max-width: 1050px) {
+    .comparison-dialog {
+        width: calc(100vw - 20px);
+        height: calc(100vh - 20px);
+    }
+
+    .comparison-dialog-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        overflow-y: auto;
+    }
+
+    .comparison-pane {
+        min-height: 500px;
+    }
+}
+
+@media (max-width: 980px) {
+    :root {
+        --dock-height: 190px;
+    }
+
+    .status-row {
+        grid-template-columns: repeat(2, 70px);
+    }
+
+    .control-dock.domain-empty,
+    .control-dock.domain-ready {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-areas: "projects import files";
+        gap: 8px;
+    }
+
+    .domain-import-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .artifact-upload {
+        grid-template-columns: 1fr;
+    }
+
+    .canvas-overlay-controls {
+        transform: scale(0.82);
+        transform-origin: top right;
+    }
+
+    .canvas-detail-toggle span {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+
+    .simulation-action-bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .export-control {
+        width: 100%;
+        padding: 8px 0 0;
+        border-left: 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .export-format-field {
+        flex: 1;
+    }
+
+    .export-format-field select {
+        width: 100%;
+    }
+
+    .comparison-dialog-content {
+        overflow-y: auto;
+        grid-template-rows: auto auto;
+    }
+
+    .comparison-metric-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-result-scroll {
+        max-height: 360px;
+    }
+
+    .simulation-results-input-card {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+
+    .domain-bulk-editor {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .domain-bulk-editor__status-actions {
+        padding-right: 0;
+        padding-bottom: 8px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .domain-bulk-editor__value {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-height: 760px) {
+    :root {
+        --app-padding: 9px;
+        --app-gap: 9px;
+
+        --header-height: 48px;
+        --simulation-bar-height: 36px;
+        --tabs-height: 30px;
+        --dock-height: 200px;
+
+        --text-xs: 9px;
+        --text-sm: 10px;
+        --text-md: 11px;
+        --text-base: 12px;
+        --text-lg: 14px;
+        --text-xl: 18px;
+        --dock-height: 190px;
+    }
+
+    .top-bar {
+        min-height: var(--header-height);
+    }
+
+    .eyebrow {
+        margin-bottom: 2px;
+        font-size: 9px;
+    }
+
+    .top-bar h1 {
+        font-size: 18px;
+    }
+
+    .status-card {
+        min-height: 42px;
+        padding: 6px 8px;
+    }
+
+    .status-card span {
+        font-size: 9px;
+    }
+
+    .status-card strong {
+        font-size: 14px;
+    }
+
+    .simulation-bar {
+        padding: 5px 7px;
+    }
+
+    .network-view-tabs {
+        min-height: var(--tabs-height);
+        padding: 3px;
+    }
+
+    .network-view-tabs button {
+        height: 24px;
+        padding: 0 10px;
+        font-size: 10px;
+    }
+
+    .network-toolbar {
+        min-height: 40px;
+        padding: 7px 11px;
+    }
+
+    .network-toolbar h2 {
+        font-size: 14px;
+    }
+
+    .network-toolbar p {
+        font-size: 10px;
+    }
+
+    .project-sidebar,
+    .artifact-panel,
+    .domain-import-panel,
+    .network-inspector {
+        padding: 10px;
+    }
+
+    .canvas-overlay-controls {
+        transform: scale(0.86);
+        transform-origin: top right;
+    }
+
+    .simulation-result-table-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .simulation-result-table-header__actions {
+        justify-content: space-between;
+    }
+
+    .terminal-demand-group {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-result-detail-row>td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 720px) {
+
+    .tpo-analysis,
+    .tpo-db-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-review-backdrop {
+        padding: 6px;
+    }
+
+    .simulation-review-dialog {
+        width: calc(100vw - 12px);
+        height: calc(100dvh - 12px);
+        border-radius: 12px;
+    }
+
+    .simulation-review-header {
+        padding: 15px;
+    }
+
+    .simulation-review-mode-switch {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 9px 12px;
+    }
+
+    .simulation-review-mode-hint {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .simulation-review-single {
+        padding: 10px;
+    }
+
+    .comparison-backdrop {
+        padding: 6px;
+    }
+
+    .comparison-dialog {
+        width: calc(100vw - 12px);
+        height: calc(100dvh - 12px);
+        border-radius: 12px;
+    }
+
+    .comparison-dialog-header {
+        padding: 16px;
+    }
+
+    .comparison-dialog-header h2 {
+        font-size: 22px;
+    }
+
+    .comparison-unified-controls {
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+
+    .comparison-unified-table-shell,
+    .comparison-snapshot-banner,
+    .comparison-metric-panel {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .comparison-unified-table {
+        font-size: 13px;
+    }
+
+    .comparison-unified-table th,
+    .comparison-unified-table td {
+        min-width: 115px;
+        padding: 10px 12px;
+    }
+
+    .comparison-source-group {
+        min-width: 340px;
+    }
+
+    .comparison-unified-table-summary {
+        display: grid;
+        gap: 8px;
+    }
+
+    .comparison-unified-table-summary p {
+        text-align: left;
+    }
+
+    .comparison-metric-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-hydraulic-settings {
+        grid-template-columns: 1fr;
+    }
+
+    .domain-clipboard-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .domain-clipboard-shortcuts {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .simulation-history-item {
+        grid-template-columns: 55px minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .simulation-history-item__actions {
+        grid-column: 1 / -1;
+    }
+
+    .domain-text-viewer__header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .domain-text-viewer__heading {
+        width: 100%;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .domain-text-viewer__metadata {
+        justify-items: start;
+    }
+
+    .domain-text-viewer__description {
+        white-space: normal;
+    }
+}
+
+@media (max-height: 680px) {
+    :root {
+        --header-height: 42px;
+        --simulation-bar-height: 32px;
+        --tabs-height: 28px;
+        --dock-height: 175px;
+    }
+
+    .top-bar h1 {
+        font-size: 16px;
+    }
+
+    .top-bar .eyebrow {
+        display: none;
+    }
+
+    .simulation-bar {
+        min-height: 32px;
+    }
+
+    .network-toolbar {
+        min-height: 36px;
+    }
+
+    .network-toolbar p {
+        display: none;
+    }
+
+    .project-sidebar h2,
+    .artifact-panel h2,
+    .domain-import-panel h2,
+    .network-inspector h2 {
+        font-size: 13px;
+    }
+
+    .project-sidebar p,
+    .artifact-panel p,
+    .domain-import-panel p,
+    .network-inspector p {
+        font-size: 10px;
+    }
+
+    .canvas-overlay-controls {
+        transform: scale(0.78);
+    }
+}
+
+@media (max-width: 980px),
+(max-height: 680px) {
+    .canvas-warning {
+        max-width: 220px;
+        font-size: 9px;
+    }
+
+    .domain-warning-box {
+        max-height: 64px;
+        overflow-y: auto;
+        font-size: 10px;
+    }
+
+    .neatwork-table-panel-header {
+        padding: 8px 10px;
+    }
+
+    .neatwork-table-panel-header p {
+        display: none;
+    }
+}
+
+@media (max-width: 650px) {
+    .comparison-backdrop {
+        padding: 0;
+    }
+
+    .comparison-dialog {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .comparison-pane-selectors {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-pane-selectors {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-snapshot-banner {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .comparison-snapshot-banner code {
+        margin-left: 0;
+    }
+
+    .database-manager__toolbar,
+    .database-manager__item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .simulation-default-preview-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .simulation-hydraulic-options {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-hydraulic-option {
+        min-height: 130px;
+    }
+}
+
+@media (max-width: 620px) {
+    .input-type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .input-library-item {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .simulation-review-parameters {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-review-run-summary__header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .simulation-results-input-card {
+        grid-template-columns: 1fr 1fr;
+    }
+
+
+    .simulation-results-dialog {
+        width: calc(100vw - 18px);
+        height: calc(100vh - 18px);
+    }
+}
+
+@media (max-width: 900px) {
+
+    .comparison-unified-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+
+    .simulation-inline-mode-options,
+    .simulation-inline-orifice__options {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (max-width: 620px) {
+
+    .comparison-unified-controls {
+        grid-template-columns: 1fr;
+    }
+
+
+    .comparison-unified-table-shell {
+        margin: 10px;
+    }
+}
+
+@media (max-width: 520px) {
+
+    .unit-settings-options {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,1636 @@
+.simulation-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.simulation-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+}
+
+.simulation-field input {
+    width: 74px;
+    min-height: 30px;
+    padding: 0 7px;
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+
+    background: var(--color-panel-soft);
+    color: var(--color-text);
+}
+
+.simulation-summary {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-left: auto;
+
+    overflow-x: auto;
+    white-space: nowrap;
+
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+}
+
+.simulation-summary strong {
+    color: var(--color-text-strong);
+}
+
+.simulation-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: clamp(12px, 3vw, 32px);
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 18%, rgba(14, 165, 233, 0.12), transparent 36%),
+        rgba(2, 6, 23, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.simulation-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    border: 1px solid rgba(56, 189, 248, 0.30);
+    border-radius: 16px;
+    background: rgba(8, 18, 35, 0.98);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+    animation: simulation-dialog-enter 140ms ease-out;
+}
+
+.simulation-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 22px 18px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.08), transparent);
+}
+
+/* =========================================================
+   SIMULATION CONFIGURATION STATE
+   ========================================================= */
+.simulation-configuration-state {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 9px;
+}
+
+.simulation-configuration-state__badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 23px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.simulation-configuration-state__badge.default {
+    border: 1px solid rgba(34, 197, 94, 0.24);
+    background: rgba(34, 197, 94, 0.07);
+    color: #86efac;
+}
+
+.simulation-configuration-state__badge.custom {
+    border: 1px solid rgba(245, 158, 11, 0.26);
+    background: rgba(245, 158, 11, 0.08);
+    color: #fbbf24;
+}
+
+.simulation-configuration-state small {
+    color: var(--color-muted);
+    font-size: 8px;
+}
+
+.simulation-dialog-body {
+    display: grid;
+    gap: 18px;
+    padding: 20px;
+}
+
+.simulation-dialog-section {
+    display: grid;
+    gap: 13px;
+    padding: 15px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.52);
+}
+
+.simulation-toggle-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 11px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 11px;
+    background: rgba(4, 12, 25, 0.52);
+    cursor: pointer;
+}
+
+.simulation-dialog-section h3 {
+    margin: 0;
+    color: var(--color-text-strong);
+    font-size: var(--text-sm);
+}
+
+.simulation-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.simulation-dialog-field {
+    display: grid;
+    gap: 5px;
+}
+
+.simulation-dialog-field span {
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+    font-weight: 700;
+}
+
+.simulation-dialog-field input,
+.simulation-dialog-field select {
+    min-height: 36px;
+    padding: 0 9px;
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    background: var(--color-panel-soft);
+    color: var(--color-text);
+}
+
+.simulation-orifice-choice {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+
+.simulation-orifice-choice label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--color-text);
+}
+
+.simulation-running-status {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    color: var(--color-muted-strong);
+    font-size: var(--text-xs);
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.simulation-running-status>span {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border: 2px solid rgba(56, 189, 248, 0.28);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: simulation-status-spin 700ms linear infinite;
+}
+
+.simulation-dialog-note {
+    margin: 0;
+    padding: 9px 10px;
+    border-left: 3px solid rgba(56, 189, 248, 0.55);
+    background: rgba(14, 165, 233, 0.06);
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+}
+
+.simulation-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.simulation-dialog-footer>div {
+    display: flex;
+    gap: 8px;
+}
+
+.simulation-cancel-button {
+    border-color: rgba(239, 68, 68, 0.40);
+    background: rgba(239, 68, 68, 0.10);
+    color: #fecaca;
+}
+
+.simulation-action-bar {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.export-control {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+
+    flex: 0 0 auto;
+}
+
+
+.export-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+}
+
+
+.export-chevron {
+    font-size: 10px;
+    line-height: 1;
+
+    transition:
+        transform 140ms ease;
+}
+
+
+/*
+ * Vertical dropdown displayed below Export.
+ */
+.export-menu {
+    position: absolute;
+
+    top: calc(100% + 7px);
+    left: 0;
+
+    z-index: 1000;
+
+    min-width: 105px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    padding: 5px;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.24);
+
+    border-radius: 10px;
+
+    background:
+        rgba(8, 18, 35, 0.98);
+
+    box-shadow:
+        0 14px 35px rgba(0, 0, 0, 0.42);
+}
+
+
+/*
+ * Important:
+ * override the normal simulation-bar button styles.
+ */
+.simulation-bar .export-menu-item {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    padding: 7px 10px;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 7px;
+
+    background: transparent;
+
+    color:
+        var(--color-text);
+
+    box-shadow: none;
+
+    font-size:
+        var(--text-xs);
+
+    font-weight: 700;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transform: none;
+}
+
+
+.simulation-bar .export-menu-item:hover:not(:disabled) {
+
+    border-color:
+        rgba(56, 189, 248, 0.26);
+
+    background:
+        rgba(14, 165, 233, 0.13);
+
+    transform: none;
+}
+
+
+.simulation-bar .export-menu-item:disabled {
+
+    opacity: 0.35;
+
+    cursor: not-allowed;
+
+    background: transparent;
+}
+
+@keyframes simulation-dialog-enter {
+
+    from {
+        opacity: 0;
+        transform: translateY(5px) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes simulation-status-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================================================
+   DEFAULT PARAMETERS PREVIEW
+   ========================================================= */
+.simulation-default-preview-dialog {
+    width: min(720px, calc(100vw - 40px));
+}
+
+.simulation-default-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.simulation-default-preview-item {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 9px;
+    background: rgba(3, 11, 24, 0.38);
+}
+
+.simulation-default-preview-item span {
+    color: var(--color-muted-strong);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.simulation-default-preview-item strong {
+    color: var(--color-text-strong);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.simulation-default-preview-note {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 8px;
+    background: rgba(14, 165, 233, 0.06);
+    color: var(--color-muted-strong);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   MANUAL HYDRAULIC MODE WIZARD
+   ========================================================= */
+.simulation-hydraulic-mode-dialog,
+.simulation-orifice-mode-dialog {
+    width: min(680px, calc(100vw - 40px));
+}
+
+.simulation-hydraulic-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.simulation-hydraulic-option {
+    min-height: 170px;
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.17);
+    border-radius: 13px;
+    background: rgba(3, 11, 24, 0.48);
+    color: var(--color-text);
+    text-align: left;
+    transition: transform 150ms ease, border-color 150ms ease,
+        background 150ms ease, opacity 150ms ease;
+}
+
+.simulation-hydraulic-option:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.46);
+    background: rgba(14, 165, 233, 0.08);
+}
+
+.simulation-hydraulic-option.recommended {
+    border-color: rgba(56, 189, 248, 0.32);
+    background: linear-gradient(145deg, rgba(14, 165, 233, 0.09), rgba(3, 11, 24, 0.48));
+}
+
+.simulation-hydraulic-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+}
+
+.simulation-hydraulic-option__badge {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    border-radius: 11px;
+    background: rgba(14, 165, 233, 0.08);
+    color: var(--color-accent);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.simulation-hydraulic-option__content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+
+.simulation-hydraulic-option__content strong {
+    color: var(--color-text-strong);
+    font-size: 14px;
+}
+
+.simulation-hydraulic-option__content>span {
+    color: var(--color-muted-strong);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+
+.simulation-hydraulic-option__content small {
+    color: var(--color-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.simulation-hydraulic-option.recommended .simulation-hydraulic-option__content small {
+    color: var(--color-accent);
+}
+
+.simulation-mode-warning {
+    margin-top: 14px;
+    padding: 11px 13px;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 9px;
+    background: rgba(245, 158, 11, 0.06);
+    color: #fbbf24;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+/* Selected mode shown in parameter form */
+.simulation-selected-mode {
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 9px;
+    padding: 5px 9px;
+    border: 1px solid rgba(56, 189, 248, 0.20);
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.06);
+}
+
+.simulation-selected-mode span {
+    color: var(--color-muted);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.simulation-selected-mode strong {
+    color: var(--color-accent);
+    font-size: 10px;
+}
+
+.simulation-mode-information {
+    display: grid;
+    gap: 4px;
+    margin-top: 12px;
+    padding: 11px 13px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    border-radius: 9px;
+    background: rgba(14, 165, 233, 0.04);
+}
+
+.simulation-mode-information strong {
+    color: var(--color-text-strong);
+    font-size: 11px;
+}
+
+.simulation-mode-information span {
+    color: var(--color-muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   EXECUTION SEED
+   ========================================================= */
+.simulation-seed-control {
+    display: grid;
+    gap: 10px;
+}
+
+.simulation-seed-toggle {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 11px 13px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 10px;
+    background: rgba(3, 11, 24, 0.42);
+}
+
+.simulation-seed-toggle>span {
+    display: grid;
+    gap: 4px;
+}
+
+.simulation-seed-toggle strong {
+    color: var(--color-text-strong);
+    font-size: 11px;
+}
+
+.simulation-seed-toggle small {
+    color: var(--color-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+
+.simulation-seed-toggle input {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    accent-color: var(--color-accent);
+}
+
+.simulation-seed-random-note {
+    padding: 9px 11px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    border-radius: 8px;
+    background: rgba(14, 165, 233, 0.04);
+    color: var(--color-muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   SIMULATION HISTORY
+   ========================================================= */
+.simulation-history-dialog {
+    width: min(900px, calc(100vw - 40px));
+}
+
+.simulation-history-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.simulation-history-toolbar input {
+    flex: 1 1 auto;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    background: rgba(2, 10, 22, 0.75);
+    color: var(--color-text-strong);
+}
+
+.simulation-history-toolbar>span {
+    color: var(--color-muted);
+    font-size: 10px;
+}
+
+.simulation-history-list {
+    max-height: 58vh;
+    display: grid;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 3px;
+}
+
+.simulation-history-item {
+    display: grid;
+
+    grid-template-columns:
+        68px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 12px 13px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.14);
+
+    border-radius: 11px;
+
+    background:
+        rgba(3, 11, 24, 0.45);
+}
+
+
+.simulation-history-item.active {
+    border-color:
+        rgba(56, 189, 248, 0.30);
+
+    background:
+        rgba(14, 165, 233, 0.05);
+}
+
+
+.simulation-history-item__number {
+    display: grid;
+
+    gap: 2px;
+
+    text-align: center;
+}
+
+
+.simulation-history-item__number strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 18px;
+}
+
+
+.simulation-history-item__number span {
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+}
+
+
+.simulation-history-item__main {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 8px;
+}
+
+
+.simulation-history-item__top {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.simulation-history-item__top time {
+    color:
+        var(--color-muted);
+
+    font-size: 10px;
+}
+
+
+.simulation-status-badge {
+    display: inline-flex;
+
+    width: fit-content;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.04em;
+}
+
+
+.status-pending,
+.status-running,
+.status-cancel_requested {
+    border:
+        1px solid rgba(56, 189, 248, 0.28);
+
+    background:
+        rgba(14, 165, 233, 0.08);
+
+    color:
+        #7dd3fc;
+}
+
+
+.status-completed {
+    border:
+        1px solid rgba(34, 197, 94, 0.28);
+
+    background:
+        rgba(34, 197, 94, 0.07);
+
+    color:
+        #86efac;
+}
+
+
+.status-completed_with_errors {
+    border:
+        1px solid rgba(245, 158, 11, 0.30);
+
+    background:
+        rgba(245, 158, 11, 0.07);
+
+    color:
+        #fbbf24;
+}
+
+
+.status-failed,
+.status-cancelled {
+    border:
+        1px solid rgba(239, 68, 68, 0.25);
+
+    background:
+        rgba(239, 68, 68, 0.06);
+
+    color:
+        #fca5a5;
+}
+
+
+.simulation-history-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 14px;
+}
+
+
+.simulation-history-meta span {
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    color:
+        var(--color-muted);
+
+    font-size: 10px;
+}
+
+
+.simulation-history-meta strong {
+    color:
+        var(--color-muted-strong);
+}
+
+
+.simulation-history-error {
+    overflow: hidden;
+
+    color:
+        #fca5a5;
+
+    font-size: 10px;
+
+    line-height: 1.45;
+
+    text-overflow: ellipsis;
+}
+
+
+.simulation-history-item__actions {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 7px;
+}
+
+
+.simulation-history-pending-action {
+    color:
+        var(--color-accent);
+
+    font-size: 10px;
+}
+
+
+.simulation-delete-summary {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+
+.simulation-delete-summary span {
+    display: grid;
+
+    gap: 3px;
+
+    min-width: 90px;
+
+    padding: 8px 10px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.13);
+
+    border-radius: 8px;
+
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+}
+
+
+.simulation-delete-summary strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 11px;
+}
+
+.simulation-history-count {
+    min-width: 18px;
+    height: 18px;
+
+    display: inline-grid;
+    place-items: center;
+
+    margin-left: 6px;
+
+    padding: 0 5px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(56, 189, 248, 0.12);
+
+    color:
+        var(--color-accent);
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* =========================================================
+   SIMULATION EXECUTION DETAILS
+   ========================================================= */
+
+.simulation-details-dialog {
+    width:
+        min(960px, calc(100vw - 40px));
+}
+
+
+.simulation-details-body {
+    display: grid;
+
+    gap: 16px;
+
+    max-height: 68vh;
+
+    overflow-y: auto;
+}
+
+
+.simulation-details-section {
+    padding: 14px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.14);
+
+    border-radius: 11px;
+
+    background:
+        rgba(3, 11, 24, 0.42);
+}
+
+
+.simulation-details-section h3 {
+    margin:
+        0 0 12px;
+
+    color:
+        var(--color-text-strong);
+
+    font-size: 12px;
+}
+
+
+.simulation-details-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit,
+            minmax(150px, 1fr));
+
+    gap: 8px;
+}
+
+.simulation-detail-value {
+    display: grid;
+    gap: 4px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: rgba(148, 163, 184, 0.04);
+}
+
+.simulation-detail-value span {
+    color: var(--color-muted);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.simulation-detail-value strong {
+    overflow-wrap: anywhere;
+    color: var(--color-text-strong);
+    font-size: 11px;
+}
+
+.simulation-details-default-message {
+    padding: 11px;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 8px;
+    background: rgba(14, 165, 233, 0.04);
+    color: var(--color-muted-strong);
+    font-size: 11px;
+}
+
+.simulation-parameter-table-wrapper {
+    overflow: auto;
+}
+
+.simulation-parameter-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.simulation-parameter-table th,
+.simulation-parameter-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+    text-align: left;
+}
+
+.simulation-parameter-table th {
+    color: var(--color-muted);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.simulation-parameter-table td {
+    color: var(--color-muted-strong);
+}
+
+.simulation-parameter-table pre {
+    margin: 0;
+    white-space: pre-wrap;
+    color: var(--color-text-strong);
+    font-family: inherit;
+}
+
+.parameter-source {
+    display: inline-flex;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.source-user_override {
+    background: rgba(245, 158, 11, 0.08);
+    color: #fbbf24;
+}
+
+.source-project_default {
+    background: rgba(56, 189, 248, 0.08);
+    color: #7dd3fc;
+}
+
+.source-generated {
+    background: rgba(168, 85, 247, 0.09);
+    color: #c4b5fd;
+}
+
+.source-not_applicable {
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--color-muted);
+}
+
+.simulation-edge-details summary {
+    cursor: pointer;
+    color: var(--color-text-strong);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.simulation-edge-state-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.simulation-edge-state-list>div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 7px;
+    background: rgba(148, 163, 184, 0.04);
+    color: var(--color-muted);
+    font-size: 9px;
+}
+
+.simulation-edge-state-list strong {
+    color: var(--color-text-strong);
+}
+
+.simulation-history-input {
+    display: grid;
+    gap: 2px;
+}
+
+.simulation-history-input strong {
+    color: var(--color-text-strong);
+    font-size: 11px;
+}
+
+.simulation-history-input span {
+    color: var(--color-muted);
+    font-size: 9px;
+}
+
+.simulation-config-badge {
+    display: inline-flex;
+    width: fit-content;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.simulation-config-badge.default {
+    background: rgba(34, 197, 94, 0.07);
+    color: #86efac;
+}
+
+.simulation-config-badge.manual {
+    background: rgba(245, 158, 11, 0.07);
+    color: #fbbf24;
+}
+
+/* =========================================================
+   INLINE MANUAL HYDRAULIC MODE
+   ========================================================= */
+
+.simulation-inline-mode-options {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.simulation-inline-mode-card {
+    min-height: 50px;
+
+    display: grid;
+
+    grid-template-columns: 42px minmax(0, 1fr);
+
+    align-items: start;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.16);
+
+    border-radius: 11px;
+
+    background:
+        rgba(3, 11, 24, 0.42);
+
+    color:
+        var(--color-text);
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        transform 140ms ease;
+}
+
+
+.simulation-inline-mode-card:hover:not(:disabled) {
+    transform:
+        translateY(-1px);
+
+    border-color:
+        rgba(56, 189, 248, 0.38);
+
+    background:
+        rgba(14, 165, 233, 0.06);
+}
+
+
+.simulation-inline-mode-card.selected {
+    border-color:
+        rgba(56, 189, 248, 0.55);
+
+    background:
+        linear-gradient(145deg,
+            rgba(14, 165, 233, 0.12),
+            rgba(3, 11, 24, 0.48));
+
+    box-shadow:
+        inset 0 0 0 1px rgba(56, 189, 248, 0.08);
+}
+
+
+.simulation-inline-mode-card:disabled {
+    cursor:
+        not-allowed;
+
+    opacity:
+        0.38;
+}
+
+
+.simulation-inline-mode-card__badge {
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+
+    place-items: center;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.28);
+
+    border-radius: 10px;
+
+    background:
+        rgba(14, 165, 233, 0.08);
+
+    color:
+        var(--color-accent);
+
+    font-size: 11px;
+
+    font-weight: 900;
+}
+
+
+.simulation-inline-mode-card__content {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 5px;
+}
+
+
+.simulation-inline-mode-card__content strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 12px;
+}
+
+
+.simulation-inline-mode-card__content>span {
+    color:
+        var(--color-muted-strong);
+
+    font-size: 10px;
+
+    line-height: 1.5;
+}
+
+
+.simulation-inline-mode-card__content small {
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+
+    line-height: 1.45;
+}
+
+.simulation-inline-orifice {
+    display: grid;
+
+    gap: 10px;
+
+    padding-top: 12px;
+
+    border-top:
+        1px solid rgba(148, 163, 184, 0.10);
+}
+
+
+.simulation-inline-orifice__heading {
+    display: grid;
+
+    gap: 3px;
+}
+
+
+.simulation-inline-orifice__heading strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 11px;
+}
+
+
+.simulation-inline-orifice__heading span {
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+}
+
+
+.simulation-inline-orifice__options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+
+.simulation-inline-orifice-card {
+    min-height: 50px;
+
+    display: grid;
+
+    grid-template-columns:
+        34px minmax(0, 1fr);
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 12px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.15);
+
+    border-radius: 9px;
+
+    background:
+        rgba(3, 11, 24, 0.38);
+
+    color:
+        var(--color-text);
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+
+.simulation-inline-orifice-card.selected {
+    border-color:
+        rgba(56, 189, 248, 0.48);
+
+    background:
+        rgba(14, 165, 233, 0.08);
+}
+
+
+.simulation-inline-orifice-card>span {
+    width: 32px;
+    height: 32px;
+
+    display: grid;
+
+    place-items: center;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.25);
+
+    border-radius: 8px;
+
+    color:
+        var(--color-accent);
+
+    font-size: 10px;
+
+    font-weight: 900;
+}
+
+
+.simulation-inline-orifice-card>div {
+    display: grid;
+
+    gap: 3px;
+}
+
+
+.simulation-inline-orifice-card strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 11px;
+}
+
+
+.simulation-inline-orifice-card small {
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+
+    line-height: 1.4;
+}
+
+
+.simulation-current-project-setting {
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+}
+
+
+.simulation-current-project-setting strong {
+    color:
+        var(--color-accent);
+}
+
+/* =========================================================
+   INDEPENDENT HYDRAULIC CONFIGURATION
+   ========================================================= */
+.simulation-hydraulic-settings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.simulation-hydraulic-setting {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content:
+        space-between;
+
+    gap: 14px;
+
+    padding:
+        13px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.15);
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(7, 17, 31, 0.48);
+
+    cursor:
+        pointer;
+}
+
+
+.simulation-hydraulic-setting__content {
+    display: grid;
+
+    gap: 4px;
+}
+
+
+.simulation-hydraulic-setting__content strong {
+    color:
+        var(--color-text-strong);
+
+    font-size:
+        11px;
+}
+
+
+.simulation-hydraulic-setting__content small {
+    color:
+        var(--color-muted);
+
+    font-size:
+        8px;
+
+    line-height:
+        1.5;
+}
+
+
+.simulation-hydraulic-setting input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+
+    flex:
+        0 0 auto;
+
+    accent-color:
+        var(--color-accent);
+}
+
+.simulation-orifice-model {
+    min-width: 0;
+
+    margin: 0;
+
+    padding:
+        12px 13px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.15);
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(7, 17, 31, 0.48);
+}
+
+
+.simulation-orifice-model legend {
+    padding:
+        0 4px;
+
+    color:
+        var(--color-text-strong);
+
+    font-size:
+        11px;
+
+    font-weight:
+        750;
+}
+
+
+.simulation-orifice-model>p {
+    margin:
+        0 0 9px;
+
+    color:
+        var(--color-muted);
+
+    font-size:
+        8px;
+}
+
+/* =========================================================
+   CLIENT DEMAND SOURCE
+   ========================================================= */
+
+.simulation-demand-source {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit,
+            minmax(140px, 1fr));
+
+    gap: 8px;
+}
+
+
+.simulation-demand-source>div {
+    display: grid;
+
+    gap: 4px;
+
+    padding:
+        10px 11px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.12);
+
+    border-radius:
+        8px;
+
+    background:
+        rgba(7, 17, 31, 0.46);
+}
+
+
+.simulation-demand-source span {
+    color:
+        var(--color-muted);
+
+    font-size:
+        8px;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        0.04em;
+}
+
+
+.simulation-demand-source strong {
+    color:
+        var(--color-text-strong);
+
+    font-size:
+        11px;
+}

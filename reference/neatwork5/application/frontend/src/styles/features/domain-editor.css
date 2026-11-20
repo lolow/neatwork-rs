@@ -1,0 +1,703 @@
+.domain-editor {
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+.domain-editor__header {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    padding: 16px 18px;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.14);
+}
+
+
+.domain-editor__header span {
+    color:
+        var(--color-accent);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+
+.domain-editor__header h2 {
+    margin: 4px 0;
+
+    color:
+        var(--color-text-strong);
+}
+
+
+.domain-editor__header p {
+    margin: 0;
+
+    color:
+        var(--color-muted);
+
+    font-size: 11px;
+}
+
+
+.domain-editor__header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+
+.domain-editor__mode-tabs {
+    flex: 0 0 auto;
+
+    display: flex;
+
+    gap: 6px;
+
+    padding: 10px 18px;
+}
+
+
+.domain-editor__mode-tabs button {
+    padding: 7px 12px;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color:
+        var(--color-muted);
+}
+
+
+.domain-editor__mode-tabs button.active {
+    border-color:
+        rgba(56, 189, 248, 0.28);
+
+    background:
+        rgba(56, 189, 248, 0.08);
+
+    color:
+        var(--color-text-strong);
+}
+
+
+.editable-domain-table input {
+    width: 100%;
+
+    min-width: 90px;
+
+    padding: 6px 8px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.15);
+
+    border-radius: 6px;
+
+    background:
+        rgba(2, 10, 22, 0.70);
+
+    color:
+        var(--color-text-strong);
+}
+
+
+.editable-domain-table input:focus {
+    outline: none;
+
+    border-color:
+        var(--color-accent);
+
+    box-shadow:
+        0 0 0 2px rgba(56, 189, 248, 0.08);
+}
+
+/* =========================================================
+   EXCEL-LIKE CELL RANGE SELECTION
+   ========================================================= */
+/*Cell selection supports contiguous rectangular ranges across multiple rows and columns.*/
+.editable-domain-cell {
+    position: relative;
+    transition: background 100ms ease, box-shadow 100ms ease;
+}
+
+.editable-domain-cell.selected {
+    background: rgba(14, 165, 233, 0.12) !important;
+}
+
+.editable-domain-cell.selected.selection-top {
+    border-top: 2px solid rgba(56, 189, 248, 0.85);
+}
+
+.editable-domain-cell.selected.selection-bottom {
+    border-bottom: 2px solid rgba(56, 189, 248, 0.85);
+}
+
+.editable-domain-cell.selected.selection-left {
+    border-left: 2px solid rgba(56, 189, 248, 0.85);
+}
+
+.editable-domain-cell.selected.selection-right {
+    border-right: 2px solid rgba(56, 189, 248, 0.85);
+}
+
+.editable-domain-cell.selected input {
+    border-color: rgba(56, 189, 248, 0.48);
+    background: rgba(8, 32, 52, 0.78);
+}
+
+.editable-domain-table.selecting {
+    user-select: none;
+}
+
+.domain-table-selection-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--color-muted);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+/* =========================================================
+   BULK CELL EDITOR
+   ========================================================= */
+
+/**
+ * Bulk editor displayed between the table header
+ * and the scrollable table body.
+ */
+.domain-bulk-editor {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(3, 11, 24, 0.88));
+    position: relative;
+    z-index: 5;
+}
+
+.domain-bulk-editor__summary {
+    min-width: 150px;
+    display: grid;
+    gap: 2px;
+}
+
+.domain-bulk-editor__summary strong {
+    color: var(--color-text-strong);
+    font-size: 10px;
+}
+
+.domain-bulk-editor__summary span {
+    color: var(--color-accent);
+    font-size: 9px;
+}
+
+.domain-bulk-editor__status-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding-right: 10px;
+    border-right: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.domain-bulk-editor__status-actions>span {
+    margin-right: 3px;
+    color: var(--color-muted);
+    font-size: 9px;
+}
+
+.domain-bulk-editor__status-actions button {
+    min-height: 28px;
+    padding: 0 9px;
+    border: 1px solid rgba(148, 163, 184, 0.17);
+    border-radius: 7px;
+    background: rgba(2, 10, 22, 0.58);
+    color: var(--color-text-strong);
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.domain-bulk-editor__status-actions button:hover {
+    border-color: rgba(56, 189, 248, 0.42);
+    background: rgba(14, 165, 233, 0.09);
+}
+
+.domain-bulk-editor__status-actions button.source {
+    color: #7dd3fc;
+}
+
+.domain-bulk-editor__status-actions button.junction {
+    color: #fbbf24;
+}
+
+.domain-bulk-editor__status-actions button.terminal {
+    color: #86efac;
+}
+
+.domain-bulk-editor__value {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.domain-bulk-editor__value input {
+    width: min(220px, 100%);
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 7px;
+    background: rgba(2, 10, 22, 0.72);
+    color: var(--color-text-strong);
+    font-size: 12px;
+}
+
+.domain-bulk-editor__value input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.08);
+}
+
+.domain-parameter-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px;
+    padding: 18px;
+}
+
+.domain-parameter-field {
+    display: grid;
+    gap: 6px;
+    padding: 11px;
+    border: 1px solid rgba(148, 163, 184, 0.13);
+    border-radius: 9px;
+    background: rgba(3, 11, 24, 0.40);
+}
+
+.domain-parameter-field span {
+    color:
+        var(--color-muted-strong);
+
+    font-size: 11px;
+}
+
+
+.domain-parameter-field input {
+    height: 36px;
+
+    padding: 0 9px;
+
+    border:
+        1px solid var(--color-border);
+
+    border-radius: 7px;
+
+    background:
+        rgba(2, 10, 22, 0.75);
+
+    color:
+        var(--color-text-strong);
+}
+
+
+.revision-source-file {
+    display: grid;
+
+    gap: 4px;
+
+    margin-bottom: 18px;
+
+    padding: 12px 14px;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.18);
+
+    border-radius: 10px;
+
+    background:
+        rgba(14, 165, 233, 0.05);
+}
+
+
+.revision-source-file span,
+.revision-source-file small {
+    color:
+        var(--color-muted);
+
+    font-size: 10px;
+}
+
+
+.revision-source-file strong {
+    color:
+        var(--color-text-strong);
+
+    font-size: 13px;
+}
+
+
+.revision-save-options {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+
+.revision-save-option {
+    min-height: 125px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 16px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.17);
+
+    border-radius: 11px;
+
+    background:
+        rgba(3, 11, 24, 0.46);
+
+    text-align: left;
+}
+
+
+.revision-save-option:hover {
+    border-color:
+        rgba(56, 189, 248, 0.45);
+
+    background:
+        rgba(14, 165, 233, 0.07);
+}
+
+
+.revision-save-option strong {
+    color:
+        var(--color-text-strong);
+}
+
+
+.revision-save-option span {
+    color:
+        var(--color-muted);
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+.revision-save-option small {
+    color:
+        var(--color-accent);
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+/* =========================================================
+   CATALOG REFERENTIAL INTEGRITY
+   ========================================================= */
+.catalog-delete-blocked-modal {
+    width: min(560px, calc(100vw - 28px));
+}
+
+.catalog-delete-blocked-item {
+    display: grid;
+    gap: 4px;
+    padding: 11px 12px;
+    border: 1px solid rgba(239, 68, 68, 0.20);
+    border-radius: 9px;
+    background: rgba(239, 68, 68, 0.055);
+}
+
+.catalog-delete-blocked-item span {
+    color: var(--color-muted);
+    font-size: 8px;
+    text-transform: uppercase;
+}
+
+
+.catalog-delete-blocked-item strong {
+    color: #fecaca;
+    font-size: 12px;
+}
+
+.catalog-delete-reference-summary {
+    display: grid;
+    gap: 3px;
+    margin-top: 12px;
+}
+
+.catalog-delete-reference-summary strong {
+    color: var(--color-text-strong);
+    font-size: 11px;
+}
+
+.catalog-delete-reference-summary span {
+    color: var(--color-muted);
+    font-size: 9px;
+}
+
+.catalog-delete-reference-list {
+    max-height: 260px;
+    overflow-y: auto;
+    display: grid;
+    gap: 5px;
+    margin-top: 9px;
+}
+
+.catalog-delete-reference-list>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: rgba(148, 163, 184, 0.045);
+}
+
+.catalog-delete-reference-list strong {
+    color: var(--color-text-strong);
+    font-size: 9px;
+}
+
+.catalog-delete-reference-list span {
+    color: var(--color-muted-strong);
+    font-size: 8px;
+}
+
+/* =========================================================
+   CLIPBOARD / EXCEL-LIKE RANGE EDITING
+   ========================================================= */
+.domain-clipboard-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 9px;
+    background: rgba(14, 165, 233, 0.05);
+}
+
+.domain-clipboard-toolbar>div:first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.domain-clipboard-toolbar strong {
+    color: var(--color-text-strong);
+    font-size: 10px;
+}
+
+.domain-clipboard-toolbar span {
+    color: var(--color-muted);
+    font-size: 8px;
+}
+
+.domain-clipboard-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.domain-clipboard-shortcuts kbd {
+    padding: 2px 5px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.07);
+    color: var(--color-text-strong);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 7px;
+}
+
+.domain-clipboard-message {
+    margin-bottom: 8px;
+    padding: 6px 9px;
+    border: 1px solid rgba(34, 197, 94, 0.18);
+    border-radius: 7px;
+    background: rgba(34, 197, 94, 0.055);
+    color: #86efac;
+    font-size: 8px;
+}
+
+.editable-domain-table.selecting .editable-domain-cell {
+    cursor: cell;
+    user-select: none;
+}
+
+.domain-table-tools {
+    grid-row: 2;
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+    padding: 8px 12px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+}
+
+.domain-editor-clipboard-surface {
+    grid-row: 3;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.domain-editor-clipboard-surface .neatwork-table-scroll {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    grid-row: auto;
+    overflow: auto;
+}
+
+.domain-cell-input.invalid {
+    border-color: rgba(248, 113, 113, 0.78);
+    box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.18);
+}
+
+.domain-cell-input.invalid:focus {
+    border-color: rgba(248, 113, 113, 0.95);
+}
+
+.domain-editor-table-header-actions {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-end;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        8px;
+}
+
+
+.domain-clipboard-inline {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        8px;
+
+    padding:
+        5px 7px;
+
+    border:
+        1px solid rgba(56,
+            189,
+            248,
+            0.14);
+
+    border-radius:
+        8px;
+
+    background:
+        rgba(14,
+            165,
+            233,
+            0.035);
+}
+
+
+.domain-clipboard-inline__selection {
+    display:
+        inline-flex;
+
+    align-items:
+        baseline;
+
+    gap:
+        5px;
+
+    color:
+        var(--color-muted);
+}
+
+
+.domain-clipboard-inline__selection strong {
+    color:
+        var(--color-text-strong);
+
+    font-size:
+        9px;
+}
+
+
+.domain-clipboard-inline__selection span {
+    font-size:
+        8px;
+}
+
+
+.domain-clipboard-message-inline {
+    color:
+        #86efac;
+
+    font-size:
+        8px;
+}
+
+
+.domain-clipboard-error-inline {
+    color:
+        #fca5a5;
+
+    font-size:
+        8px;
+}

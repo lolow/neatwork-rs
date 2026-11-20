@@ -1,0 +1,21 @@
+# ignorer tout par défaut dans examples
+*/*
+.DS_Store
+
+# autoriser les sous-arbres
+!tpo_examples/
+!tpo_examples/**
+
+!dsg_examples/
+!dsg_examples/**
+
+# autoriser les types utiles (dans ces sous-arbres)
+!**/*.tpo
+!**/*.db
+!**/*.inp
+!**/*.txt
+!**/*.dsg
+!**/*.json
+!**/*.mat
+!**/README.md
+!**/.gitkeep

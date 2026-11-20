@@ -1,0 +1,494 @@
+/* =========================================================
+   WATER INTRO TRANSITION
+   ========================================================= */
+.water-transition {
+    width: 100%;
+    height: 100dvh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 55%, #0b2942 0%, #071727 38%, #050d19 78%);
+    perspective: 1100px;
+    animation: water-transition-screen-out 700ms ease 2500ms forwards;
+}
+
+/* =========================================================
+   3D SCENE
+   ========================================================= */
+.water-transition__scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    perspective: 1100px;
+}
+
+/* =========================================================
+   AMBIENT LIGHT
+   ========================================================= */
+.water-transition__ambient {
+    position: absolute;
+    width: 720px;
+    height: 720px;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(14, 165, 233, 0.08) 38%, transparent 70%);
+    filter: blur(10px);
+    animation: water-ambient-pulse 2600ms ease-in-out forwards;
+}
+
+/* =========================================================
+   WATER PLANE
+   ========================================================= */
+.water-transition__water-plane {
+    position: absolute;
+    width: 850px;
+    height: 850px;
+    left: 50%;
+    top: 58%;
+    transform-style: preserve-3d;
+    transform: translate(-50%, -50%) rotateX(67deg) translateZ(-70px);
+    border-radius: 50%;
+}
+
+/* =========================================================
+   RIPPLES
+   ========================================================= */
+.water-transition__ripple {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 120px;
+    height: 120px;
+    border: 2px solid rgba(125, 211, 252, 0.48);
+    border-radius: 50%;
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.12), inset 0 0 24px rgba(56, 189, 248, 0.08);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+}
+
+.water-transition__ripple--1 {
+    animation: water-ripple-expand 1900ms ease-out 500ms forwards;
+}
+
+.water-transition__ripple--2 {
+    animation: water-ripple-expand 1900ms ease-out 800ms forwards;
+}
+
+.water-transition__ripple--3 {
+    animation: water-ripple-expand 1900ms ease-out 1100ms forwards;
+}
+
+/* =========================================================
+   WATER DROP
+   ========================================================= */
+.water-transition__drop-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 20%;
+    width: 40px;
+    height: 150px;
+    transform: translateX(-50%);
+    z-index: 3;
+}
+
+.water-transition__drop {
+    position: absolute;
+    width: 26px;
+    height: 34px;
+    left: 7px;
+    top: 0;
+    border-radius: 55% 55% 60% 60%;
+    background: linear-gradient(145deg, rgba(224, 242, 254, 0.95), rgba(56, 189, 248, 0.88) 45%, rgba(14, 165, 233, 0.62));
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+    transform: rotate(45deg) scale(0);
+    animation: water-drop-fall 950ms cubic-bezier(.3, .6, .35, 1) 150ms forwards;
+}
+
+/* =========================================================
+   WATER NETWORK
+   ========================================================= */
+.water-transition__network {
+    position: absolute;
+    width: 470px;
+    height: 270px;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%) rotateX(58deg) rotateZ(-8deg) translateZ(20px);
+    transform-style: preserve-3d;
+    opacity: 0;
+    animation: water-network-enter 1100ms cubic-bezier(.2, .8, .3, 1) 1150ms forwards;
+}
+
+/* =========================================================
+   NETWORK NODES
+   ========================================================= */
+.water-transition__node {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(186, 230, 253, 0.92);
+    background: radial-gradient(circle at 35% 30%, #f0f9ff, #38bdf8 40%, #0284c7 100%);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.65);
+    z-index: 3;
+}
+
+.water-transition__node--1 {
+    left: 30px;
+    top: 130px;
+}
+
+.water-transition__node--2 {
+    left: 145px;
+    top: 70px;
+}
+
+.water-transition__node--3 {
+    left: 255px;
+    top: 130px;
+}
+
+.water-transition__node--4 {
+    left: 355px;
+    top: 55px;
+}
+
+.water-transition__node--5 {
+    left: 415px;
+    top: 180px;
+}
+
+/* =========================================================
+   NETWORK PIPES
+   ========================================================= */
+.water-transition__pipe {
+    position: absolute;
+    height: 6px;
+    border-radius: 999px;
+    transform-origin: left center;
+    background: linear-gradient(90deg, rgba(2, 132, 199, 0.30), rgba(56, 189, 248, 0.92), rgba(125, 211, 252, 0.72));
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.22);
+    z-index: 1;
+}
+
+.water-transition__pipe--1 {
+    width: 130px;
+    left: 43px;
+    top: 134px;
+    transform: rotate(-28deg);
+}
+
+
+.water-transition__pipe--2 {
+    width: 126px;
+    left: 158px;
+    top: 77px;
+    transform: rotate(29deg);
+}
+
+
+.water-transition__pipe--3 {
+    width: 130px;
+    left: 268px;
+    top: 133px;
+    transform: rotate(-37deg);
+}
+
+.water-transition__pipe--4 {
+    width: 145px;
+    left: 366px;
+    top: 67px;
+    transform: rotate(65deg);
+}
+
+/* =========================================================
+   FLOW PARTICLES
+   ========================================================= */
+.water-transition__flow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.water-transition__flow-dot {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e0f2fe;
+    box-shadow: 0 0 12px #38bdf8, 0 0 25px rgba(56, 189, 248, 0.75);
+    opacity: 0;
+}
+
+.water-transition__flow-dot--1 {
+    left: 43%;
+    top: 51%;
+    animation: water-flow-one 1100ms ease 1650ms forwards;
+}
+
+
+.water-transition__flow-dot--2 {
+    left: 50%;
+    top: 53%;
+    animation: water-flow-two 1000ms ease 1800ms forwards;
+}
+
+
+.water-transition__flow-dot--3 {
+    left: 57%;
+    top: 48%;
+    animation: water-flow-three 900ms ease 1950ms forwards;
+}
+
+/* =========================================================
+   TEXT CONTENT
+   ========================================================= */
+.water-transition__content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateY(-160px);
+    text-align: center;
+    pointer-events: none;
+}
+
+.water-transition__logo {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    border-radius: 16px;
+    background: rgba(14, 165, 233, 0.11);
+    color: var(--color-accent);
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.12);
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+    animation: water-content-enter 600ms ease 900ms forwards;
+}
+
+.water-transition__logo svg {
+    width: 28px;
+    height: 28px;
+}
+
+.water-transition__content h1 {
+    margin: 0;
+    color: var(--color-text-strong);
+    font-size: 42px;
+    letter-spacing: -0.045em;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: water-content-enter 600ms ease 1000ms forwards;
+}
+
+.water-transition__content p {
+    margin: 10px 0 0;
+    color: var(--color-muted-strong);
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: water-content-enter 600ms ease 1120ms forwards;
+}
+
+/* =========================================================
+   KEYFRAMES
+   ========================================================= */
+
+@keyframes water-drop-fall {
+    0% {
+        top: 0;
+        opacity: 0;
+        transform: rotate(45deg) scale(0.25);
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    75% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 135px;
+        opacity: 0;
+        transform: rotate(45deg) scale(0.9);
+    }
+}
+
+
+@keyframes water-ripple-expand {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.15);
+    }
+
+    18% {
+        opacity: 0.82;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(5.3);
+    }
+}
+
+
+@keyframes water-network-enter {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotateX(72deg) rotateZ(-14deg) translateZ(-130px) scale(0.72);
+    }
+
+    100% {
+        opacity: 0.88;
+        transform: translate(-50%, -50%) rotateX(58deg) rotateZ(-8deg) translateZ(20px) scale(1);
+    }
+}
+
+@keyframes water-ambient-pulse {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.7);
+    }
+
+    55% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+
+@keyframes water-content-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+@keyframes water-flow-one {
+    0% {
+        opacity: 0;
+
+        transform:
+            translate(-80px, 45px) scale(0.6);
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(40px, -20px) scale(1);
+    }
+}
+
+
+@keyframes water-flow-two {
+    0% {
+        opacity: 0;
+
+        transform:
+            translate(-50px, -30px) scale(0.6);
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(80px, 30px) scale(1);
+    }
+}
+
+
+@keyframes water-flow-three {
+    0% {
+        opacity: 0;
+
+        transform:
+            translate(-30px, 35px) scale(0.6);
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(70px, -45px) scale(1);
+    }
+}
+
+
+@keyframes water-transition-screen-out {
+    from {
+        opacity: 1;
+
+        transform:
+            scale(1);
+    }
+
+    to {
+        opacity: 0;
+
+        transform:
+            scale(1.025);
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .water-transition,
+    .water-transition *,
+    .water-transition *::before,
+    .water-transition *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+    }
+}

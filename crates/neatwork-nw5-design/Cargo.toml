@@ -1,0 +1,11 @@
+[package]
+name = "neatwork-nw5-design"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+neatwork-nw5 = { path = "../neatwork-nw5" }
+
+[lints]
+workspace = true

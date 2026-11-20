@@ -1,0 +1,22 @@
+.domain-import-panel {
+    min-width: 0;
+}
+
+.domain-import-panel form,
+.domain-import-form {
+    min-height: 0;
+}
+
+.domain-import-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 0.45fr) minmax(220px, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.domain-db-section {
+    padding: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: var(--radius-md);
+    background: rgba(8, 18, 35, 0.55);
+}

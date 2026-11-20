@@ -1,0 +1,46 @@
+ macOS
+.DS_Store
+
+# MATLAB
+*.asv
+*.m~
+*.mex*
+*.mat
+*.fig
+*.mlx.autosave
+*.bak
+*.tmp
+
+# Fichiers temporaires de docs
+*.pdf
+*.docx
+*.odt
+*.aux
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+.ipynb_checkpoints/
+
+# macOS system files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Large data or local runs
+runs/
+outputs/
+
+matlab/out/
+.gitOld/
+out/
+reserve/
+shared-data/
+node_modules/

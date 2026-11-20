@@ -1,0 +1,12 @@
+[package]
+name = "neatwork-nw5"
+description = "NeatWork 5 engine: stochastic design and simulation of water networks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+highs = "2.4.0"
+
+[lints]
+workspace = true

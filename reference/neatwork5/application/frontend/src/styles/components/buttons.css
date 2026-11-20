@@ -1,0 +1,78 @@
+button {
+    border: 0;
+    font-weight: 800;
+    transition:
+        background 0.16s ease,
+        border-color 0.16s ease,
+        color 0.16s ease,
+        transform 0.12s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.primary-button,
+.simulation-bar button,
+.domain-import-panel button[type="submit"],
+.artifact-upload button,
+.project-form button {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #ffffff;
+
+    box-shadow: 0 10px 24px rgba(14, 165, 233, 0.22);
+}
+
+.primary-button:hover,
+.simulation-bar button:hover,
+.domain-import-panel button[type="submit"]:hover,
+.artifact-upload button:hover,
+.project-form button:hover {
+    background: linear-gradient(135deg, #38bdf8, #3b82f6);
+}
+
+.secondary-button,
+.network-view-tabs button,
+.zoom-controls button,
+.rotation-buttons button {
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    background: rgba(8, 18, 35, 0.82);
+    color: var(--color-muted-strong);
+}
+
+.secondary-button:hover,
+.network-view-tabs button:hover,
+.zoom-controls button:hover,
+.rotation-buttons button:hover {
+    border-color: rgba(56, 189, 248, 0.65);
+    background: rgba(14, 165, 233, 0.18);
+    color: var(--color-text-strong);
+}
+
+.network-view-tabs button.active {
+    border-color: rgba(56, 189, 248, 0.55);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.34), rgba(37, 99, 235, 0.28));
+    color: #e0f2fe;
+}
+
+.danger-button {
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.16);
+    color: #fecaca;
+}
+
+.danger-button:hover {
+    background: rgba(239, 68, 68, 0.26);
+}

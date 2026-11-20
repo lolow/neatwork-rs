@@ -1,0 +1,143 @@
+/* Linear topology view and node search */
+
+/* ========================================
+   View toolbar
+   ======================================== */
+
+.network-view-toolbar {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* ========================================
+   Node search
+   ======================================== */
+
+.network-node-search-wrap {
+    position: relative;
+    min-width: 260px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.network-node-search {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(130px, 220px) auto;
+    gap: 6px;
+}
+
+.network-node-search input {
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    border-radius: 10px;
+    background: rgba(8, 18, 35, 0.92);
+    color: var(--color-text);
+}
+
+.network-node-search input:focus {
+    outline: none;
+    border-color: var(--color-border-strong);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.10);
+}
+
+.network-node-search button {
+    height: 34px;
+    padding: 0 14px;
+    white-space: nowrap;
+}
+
+.network-node-search-message {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    z-index: 15;
+    max-width: 300px;
+    padding: 6px 9px;
+    border: 1px solid rgba(251, 146, 60, 0.28);
+    border-radius: 8px;
+    background: rgba(8, 18, 35, 0.96);
+    color: var(--color-warning);
+    font-size: var(--text-xs);
+    box-shadow: var(--shadow-control);
+}
+
+/* ========================================
+   Linear view metadata
+   ======================================== */
+
+.linear-network-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.linear-network-meta span {
+    padding: 5px 8px;
+    border: 1px solid rgba(56, 189, 248, 0.20);
+    border-radius: 999px;
+    background: rgba(8, 18, 35, 0.72);
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+}
+
+/* ========================================
+   Linear canvas controls
+   ======================================== */
+
+.linear-canvas-controls {
+    align-items: center;
+}
+
+.linear-network-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 8px;
+    border-left: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.linear-network-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+}
+
+.linear-legend-line {
+    width: 24px;
+    height: 0;
+    display: inline-block;
+    border-top: 3px solid rgba(56, 189, 248, 0.65);
+}
+
+.linear-legend-line.path {
+    border-top-color: #facc15;
+    border-top-width: 4px;
+}
+
+.linear-legend-line.loop {
+    border-top-style: dashed;
+    border-top-width: 2px;
+}
+
+/*
+ * The topology layout uses the same canvas interaction
+ * language as the geometric graph.
+ */
+.linear-network-workspace .canvas-frame canvas {
+    cursor: grab;
+}
+
+.linear-network-workspace .canvas-frame canvas:active {
+    cursor: grabbing;
+}

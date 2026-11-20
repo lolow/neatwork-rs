@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0",
+  "network": {
+    "name": "Toy",
+    "version": ""
+  },
+  "units": {
+    "sourceFlow": "L/s",
+    "pipeVelocity": "m/s",
+    "terminalPressure": "m",
+    "transitPressure": "m",
+    "duration": "s",
+    "satisfaction": "ratio"
+  },
+  "summary": {
+    "scenarioCount": 10,
+    "successfulScenarios": 10,
+    "failedScenarios": 0,
+    "successRate": 1.0,
+    "seed": 42,
+    "durationSeconds": 0.029071333003230393,
+    "minIterations": 9,
+    "meanIterations": 9.7,
+    "maxIterations": 10,
+    "failureCountByCode": {}
+  },
+  "scenarioSelection": {
+    "successfulMask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "includedScenarioIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "excludedScenarioIndices": []
+  },
+  "statistics": {
+    "terminalSatisfaction": [
+      {
+        "terminalId": "P1",
+        "minSat": 0.8981336503839946,
+        "moySat": 1.0373920001276546,
+        "maxSat": 1.1766503498713146,
+        "cVarSat5": 0.8981336503839946,
+        "cVarSat20": 0.8981336503839946
+      },
+      {
+        "terminalId": "P2",
+        "minSat": 0.7844295859105012,
+        "moySat": 1.1222417811380851,
+        "maxSat": 1.5385091075658033,
+        "cVarSat5": 0.7844295859105012,
+        "cVarSat20": 0.7844295859105012
+      },
+      {
+        "terminalId": "P3",
+        "minSat": 0.916400857393762,
+        "moySat": 0.9689288006723112,
+        "maxSat": 1.0988721148828289,
+        "cVarSat5": 0.916400857393762,
+        "cVarSat20": 0.916400857393762
+      },
+      {
+        "terminalId": "P4",
+        "minSat": 1.017641487472895,
+        "moySat": 1.0231333178029303,
+        "maxSat": 1.0396088087930364,
+        "cVarSat5": 1.017641487472895,
+        "cVarSat20": 1.017641487472895
+      }
+    ],
+    "sourceFlow": [
+      {
+        "sourceId": "Source",
+        "minSt": 0.13186465378593945,
+        "moySt": 0.23063715998012563,
+        "maxSt": 0.3130161576736847,
+        "cVarSt5": 0.13186465378593945,
+        "cVarSt95": 0.3130161576736847
+      }
+    ],
+    "pipeVelocity": [
+      {
+        "edgeId": "A1",
+        "startNodeId": "Source",
+        "endNodeId": "A",
+        "minVelocityMps": 0.18167340260676657,
+        "meanVelocityMps": 0.31775488289052334,
+        "maxVelocityMps": 0.4312505952337173
+      },
+      {
+        "edgeId": "A2",
+        "startNodeId": "A",
+        "endNodeId": "B",
+        "minVelocityMps": 3.1460186589421184e-20,
+        "meanVelocityMps": 0.1539800475025742,
+        "maxVelocityMps": 0.3135657204380868
+      },
+      {
+        "edgeId": "A3",
+        "startNodeId": "A",
+        "endNodeId": "C",
+        "minVelocityMps": 4.2613511132368935e-20,
+        "meanVelocityMps": 0.2740681790350875,
+        "maxVelocityMps": 0.535083573311337
+      }
+    ],
+    "terminalPressure": [
+      {
+        "terminalId": "P1",
+        "minPressureM": -7.49801856159138e-08,
+        "meanPressureM": -3.777528290171972e-08,
+        "maxPressureM": -5.703801875256431e-10
+      },
+      {
+        "terminalId": "P2",
+        "minPressureM": -8.602693277737217e-07,
+        "meanPressureM": -1.8479250805114588e-07,
+        "maxPressureM": -3.6933993641241614e-09
+      },
+      {
+        "terminalId": "P3",
+        "minPressureM": -8.671151041639291e-07,
+        "meanPressureM": -4.27232190717645e-07,
+        "maxPressureM": -2.5599423691957668e-09
+      },
+      {
+        "terminalId": "P4",
+        "minPressureM": -3.272796877951123e-08,
+        "meanPressureM": -3.0760512137462115e-08,
+        "maxPressureM": -2.485814221131477e-08
+      }
+    ],
+    "transitPressure": [
+      {
+        "transitNodeId": "A",
+        "minPressureM": 8.162049246899313,
+        "meanPressureM": 8.899603969831322,
+        "maxPressureM": 9.60583491132841
+      },
+      {
+        "transitNodeId": "B",
+        "minPressureM": 7.791937674143604,
+        "meanPressureM": 11.274118332891115,
+        "maxPressureM": 14.60583491132841
+      },
+      {
+        "transitNodeId": "C",
+        "minPressureM": 0.6283040330174847,
+        "meanPressureM": 1.3442580486209732,
+        "maxPressureM": 2.2822445429849108
+      }
+    ]
+  },
+  "failures": []
+}

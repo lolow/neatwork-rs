@@ -2912,6 +2912,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "neatwork-nw5"
+version = "0.1.0"
+dependencies = [
+ "highs",
+]
+
+[[package]]
+name = "neatwork-nw5-design"
+version = "0.1.0"
+dependencies = [
+ "neatwork-nw5",
+]
+
+[[package]]
+name = "neatwork-nw5-io"
+version = "0.1.0"
+dependencies = [
+ "neatwork-nw5",
+]
+
+[[package]]
+name = "neatwork-nw5-sim"
+version = "0.1.0"
+dependencies = [
+ "neatwork-nw5",
+]
+
+[[package]]
 name = "nix"
 version = "0.31.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

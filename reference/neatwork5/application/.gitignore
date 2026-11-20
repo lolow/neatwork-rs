@@ -1,0 +1,138 @@
+.DS_Store
+.DS_Store?
+._*
+../../.DS_Store
+
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Node / Electron dependencies and builds
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/release/
+frontend/out/
+frontend/.vite/
+
+
+# Electron packaged outputs
+*.dmg
+*.app
+*.asar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.ipr
+
+# Java / Maven
+backend/target/
+target/
+*.class
+*.jar
+*.war
+
+# Node / React / Electron
+node_modules/
+dist/
+build/
+*.egg-info/
+.vite/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+python-core/.venv/
+python-core/venv/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+python-core/dist/
+python-core/build/
+*.pyz
+*.pkg
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+
+# Environment files
+.env
+*.env
+.env.*
+!.env.example
+application-local.properties
+application-dev-local.properties
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded local data files
+*.tpo
+
+# Large archives / temporary uploads
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# NeatWork runtime workspace / uploaded artifacts
+neatwork-workspace/
+backend/neatwork-workspace/
+backend/root-dir*/
+**/neatwork-workspace/
+**/inputs/
+**/outputs/
+
+# NeatWork generated files
+*.dsg
+*.inp
+*_fusion.meta.json
+*_TableFusion.csv
+*_fusion*.json
+*_fusion*.csv
+*.epanet
+*.rpt
+*.out
+
+# Simulation exports
+simul_debit_*.xlsx

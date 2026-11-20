@@ -1,0 +1,46 @@
+[project]
+name = "neatwork-python-core"
+version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.8.0",
+    "numpy",
+    "pandas>=2.2,<3",
+    "scipy",
+    "tqdm",
+    "scikit-sparse>=0.5.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=9.0",
+]
+reference = [
+    "wntr==1.5.0",
+]
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["output*", "tests*"]
+
+[tool.pytest]
+minversion = "9.0"
+testpaths = [
+    "tests",
+]
+addopts = [
+    "-ra",
+    "-q",
+]
+strict = true
+
+markers = [
+    "unit: fast isolated test",
+    "regression: deterministic hydraulic regression test",
+    "reference: comparison against external reference data",
+    "slow: computationally expensive test",
+]
+
+[tool.uvicorn]
+factory = false

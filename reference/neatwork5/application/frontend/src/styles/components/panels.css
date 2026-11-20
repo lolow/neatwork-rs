@@ -1,0 +1,68 @@
+.project-sidebar,
+.artifact-panel,
+.domain-import-panel,
+.network-inspector {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+
+    padding: 13px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-panel);
+
+    box-shadow: var(--shadow-panel);
+}
+
+.project-sidebar,
+.artifact-panel,
+.domain-import-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.project-sidebar h2,
+.artifact-panel h2,
+.domain-import-panel h2,
+.network-inspector h2 {
+    margin: 0 0 3px;
+    font-size: var(--text-lg);
+    line-height: var(--line-tight);
+}
+
+.project-sidebar p,
+.artifact-panel p,
+.domain-import-panel p,
+.network-inspector p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+    line-height: 1.35;
+}
+
+.project-list,
+.artifact-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+
+    display: grid;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+.domain-import-form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+}
+
+.network-inspector {
+    overflow-y: auto;
+}

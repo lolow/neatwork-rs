@@ -148,3 +148,55 @@ Context: Some Java windows show wrong data or lose data (see `docs/gui.md`). The
 
 Decision: The interface fixes them and lists each fix in `docs/gui.md`. Engine behavior (ADR-008) does not change.
 
+
+## ADR-018: NeatWork 5 becomes the default engine
+
+Status: accepted (2026-11-20). Changes the default engine of ADR-001 and ADR-014.
+
+Context: The user asked to integrate the new features of NeatWork 5 (`APLV-F/neatwork5-mat-2`): the NW5 simulation, the NW5 design (`makeReinfDsg`), the NW5 formats and the features of the NW5 application. The user chose to replace NW4 by NW5.
+
+Decision: NW5 is the default engine of the command line and of the interface. The NW4 engine stays as `--engine nw4` and as a choice in the interface, to read and recompute NW4 projects with the output of NeatWork 2024.
+
+Consequences: The 16 NW4 cases keep their byte-identical bar with `--engine nw4`. The plan is in `rust/nw5/PLAN.md`.
+
+## ADR-019: NW5 references
+
+Status: accepted (2026-11-20)
+
+Context: MATLAB is not available. The NW5 simulation also exists in Python (`application/python-core`), which runs here.
+
+Decision: The python-core simulation is the reference of the NW5 simulation, within a relative tolerance of 1e-8 and an absolute tolerance of 1e-10. The NW5 design is checked against the expected values of the MATLAB tests and the example `.dsg` files that `makeReinfDsg` produced.
+
+## ADR-020: The NW5 sources are part of the reference folder
+
+Status: accepted (2026-11-20)
+
+Decision: `reference/neatwork5` holds a copy of `APLV-F/neatwork5-mat-2` at the commit in `SOURCE_COMMIT`, without its Git history, as `reference/neatwork2024` does for NW4.
+
+## ADR-021: Port the intent of NW5, not its defects
+
+Status: accepted (2026-11-20)
+
+Context: The committed MATLAB design does not run (inverted length test in `prepareReinforcementTables.m:134` and `equivResist.m:38`, undefined variable in `enrichTablesReinf.m:69`). The python-core has defects too (default `lambda` 0, no simulation without `!Borne`, misspelled default keys, XLSX export crash, mislabelled source rows).
+
+Decision: The port implements the behavior that the tests and the design notes describe. Each correction is listed in `rust/nw5/specs/*.md` and in the NW5 documentation of the port. Where the python-core works, the Rust simulation equals it within 1e-8.
+
+## ADR-022: NW5 flows and margins go to a new section
+
+Status: accepted (2026-11-20)
+
+Context: NW4 reads load factors in `!loadfactor`. The current MATLAB writes flows and margins there.
+
+Decision: The port keeps `!loadfactor` with the NW4 meaning and writes the NW5 flows and margins in a new section `!loadflow`. It reads the three older forms of `!loadfactor`.
+
+## ADR-023: NW5 design options
+
+Status: accepted (2026-11-20)
+
+Decision: The port implements the VaR load factors (default) and the CVaR load factors (`use_cvar`). `fusion`, `split` and `use_efficient_pipes` are read and kept in the files, but they have no effect, as in the current MATLAB.
+
+## ADR-024: NW5 projects are folders
+
+Status: accepted (2026-11-20)
+
+Decision: The interface keeps a NW5 project in a folder: revisions `<name>_v<N>.tpo` or `.dsg`, `project.json`, `graph.json` (node positions and valve states), and one `runs/<NNNN>.json` per simulation run. A single `.tpo` or `.dsg` file still opens without a folder.

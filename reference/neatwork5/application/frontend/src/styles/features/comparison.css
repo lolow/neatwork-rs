@@ -1,0 +1,1630 @@
+/* =========================================================
+   HYDRAULIC COMPARISON
+   ========================================================= */
+
+/**
+ * Full-screen overlay used by the comparison workspace.
+ */
+.comparison-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 2200;
+
+    display: grid;
+    place-items: center;
+
+    padding: 16px;
+
+    background: rgba(2, 8, 20, 0.82);
+
+    backdrop-filter: blur(6px);
+}
+
+
+/* =========================================================
+   MAIN DIALOG
+   ========================================================= */
+
+/**
+ * Main comparison workspace.
+ *
+ * The dialog uses almost the full viewport because comparison
+ * tables need substantially more horizontal space than normal
+ * application dialogs.
+ */
+.comparison-dialog {
+    width: min(1720px,
+            calc(100vw - 32px));
+
+    height: min(980px,
+            calc(100dvh - 32px));
+
+    min-width: 0;
+    min-height: 0;
+
+    display: grid;
+
+    grid-template-rows:
+        auto minmax(0, 1fr);
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.30);
+
+    border-radius: 18px;
+
+    background:
+        #07111f;
+
+    box-shadow:
+        0 32px 90px rgba(0, 0, 0, 0.55);
+
+    color:
+        #e6eef8;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.comparison-dialog-header {
+    display: flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap: 24px;
+
+    padding:
+        24px 28px 20px;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.14);
+
+    background:
+        #081526;
+}
+
+
+.comparison-dialog-header h2 {
+    margin: 0;
+
+    color:
+        #f8fafc;
+
+    font-size:
+        28px;
+
+    line-height:
+        1.15;
+
+    font-weight:
+        760;
+
+    letter-spacing:
+        -0.02em;
+}
+
+
+.comparison-dialog-header p {
+    margin:
+        7px 0 0;
+
+    color:
+        #9fb0c3;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.5;
+}
+
+
+/* =========================================================
+   INPUT SCOPE
+   ========================================================= */
+
+.comparison-input-scope {
+    display: flex;
+
+    align-items:
+        center;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        8px 12px;
+
+    margin-top:
+        16px;
+
+    color:
+        #a7b8ca;
+
+    font-size:
+        14px;
+}
+
+
+.comparison-input-scope>span {
+    display: inline-flex;
+
+    align-items:
+        center;
+
+    min-height:
+        32px;
+
+    padding:
+        0 12px;
+
+    border:
+        1px solid rgba(56, 189, 248, 0.30);
+
+    border-radius:
+        999px;
+
+    background:
+        rgba(14, 165, 233, 0.08);
+
+    color:
+        #8dd7ff;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+}
+
+
+.comparison-input-scope>strong {
+    color:
+        #f8fafc;
+
+    font-size:
+        15px;
+
+    font-weight:
+        720;
+}
+
+
+.comparison-input-scope>small {
+    flex-basis:
+        100%;
+
+    color:
+        #8296ad;
+
+    font-size:
+        13px;
+
+    line-height:
+        1.5;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.comparison-close-button {
+    width:
+        40px;
+
+    height:
+        40px;
+
+    flex:
+        0 0 auto;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    padding: 0;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.24);
+
+    border-radius:
+        11px;
+
+    background:
+        #0d182a;
+
+    color:
+        #aebdd0;
+
+    font-size:
+        22px;
+
+    line-height:
+        1;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+}
+
+
+.comparison-close-button:hover {
+    border-color:
+        rgba(56, 189, 248, 0.55);
+
+    background:
+        #12223a;
+
+    color:
+        #ffffff;
+}
+
+
+/* =========================================================
+   DIALOG CONTENT
+   ========================================================= */
+
+.comparison-dialog-content {
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        16px;
+
+    overflow-y:
+        auto;
+
+    overflow-x:
+        hidden;
+
+    scrollbar-gutter:
+        stable;
+
+    background:
+        #07111f;
+}
+
+
+/* =========================================================
+   TOP CONTROLS
+   ========================================================= */
+
+/**
+ * Unified selectors shared by both comparison datasets.
+ */
+.comparison-unified-controls {
+    display: grid;
+
+    grid-template-columns:
+        minmax(280px, 1.3fr) minmax(280px, 1.3fr) minmax(220px, 0.85fr);
+
+    gap:
+        14px;
+
+    padding:
+        16px 20px;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.14);
+
+    background:
+        #081526;
+}
+
+
+.comparison-select-field {
+    min-width: 0;
+
+    display: grid;
+
+    gap:
+        7px;
+}
+
+
+.comparison-select-field>span {
+    color:
+        #a9b9cb;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+}
+
+
+.comparison-select-field select {
+    width:
+        100%;
+
+    min-width:
+        0;
+
+    height:
+        46px;
+
+    padding:
+        0 38px 0 14px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.28);
+
+    border-radius:
+        10px;
+
+    outline:
+        none;
+
+    background:
+        #101b2f;
+
+    color:
+        #f1f5f9;
+
+    font-size:
+        16px;
+
+    cursor:
+        pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.comparison-select-field select:hover {
+    border-color:
+        rgba(56, 189, 248, 0.45);
+}
+
+
+.comparison-select-field select:focus {
+    border-color:
+        rgba(56, 189, 248, 0.75);
+
+    box-shadow:
+        0 0 0 3px rgba(56, 189, 248, 0.10);
+
+    background:
+        #12213a;
+}
+
+
+/* =========================================================
+   LOADING / ERROR / EMPTY STATES
+   ========================================================= */
+
+.comparison-unified-state,
+.comparison-no-common-table {
+    margin:
+        0 20px;
+
+    padding:
+        24px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.16);
+
+    border-radius:
+        14px;
+
+    background:
+        #0a1728;
+
+    color:
+        #b7c5d6;
+
+    text-align:
+        center;
+}
+
+
+.comparison-unified-state.error {
+    border-color:
+        rgba(248, 113, 113, 0.35);
+
+    background:
+        rgba(75, 20, 30, 0.35);
+
+    color:
+        #fecaca;
+}
+
+
+.comparison-no-common-table {
+    display: grid;
+
+    place-items:
+        center;
+
+    gap:
+        8px;
+
+    min-height:
+        180px;
+}
+
+
+.comparison-no-common-table strong {
+    color:
+        #f8fafc;
+
+    font-size:
+        16px;
+}
+
+
+.comparison-no-common-table p {
+    max-width:
+        520px;
+
+    margin: 0;
+
+    color:
+        #96a8bc;
+
+    font-size:
+        14px;
+
+    line-height:
+        1.55;
+}
+
+
+/* =========================================================
+   UNIFIED TABLE SHELL
+   ========================================================= */
+
+.comparison-unified-table-shell {
+    min-width: 0;
+    min-height: 300px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    margin: 0 20px;
+    border: 1px solid rgba(56, 189, 248, 0.20);
+    border-radius: 14px;
+    background: #081526;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+
+/* =========================================================
+   TABLE SUMMARY
+   ========================================================= */
+
+.comparison-unified-table-summary {
+    display: flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap:
+        24px;
+
+    padding:
+        16px 20px;
+
+    border-bottom:
+        1px solid rgba(56, 189, 248, 0.14);
+
+    background:
+        #0a192b;
+}
+
+
+.comparison-unified-table-summary>div {
+    display:
+        grid;
+
+    gap:
+        5px;
+}
+
+
+.comparison-unified-table-summary strong {
+    color:
+        #f8fafc;
+
+    font-size:
+        17px;
+
+    font-weight:
+        750;
+}
+
+
+.comparison-unified-table-summary span {
+    color:
+        #8fa1b7;
+
+    font-size:
+        13px;
+}
+
+
+.comparison-unified-table-summary p {
+    max-width:
+        620px;
+
+    margin:
+        0;
+
+    color:
+        #91a4ba;
+
+    font-size:
+        14px;
+
+    line-height:
+        1.45;
+
+    text-align:
+        center;
+}
+
+
+/* =========================================================
+   TABLE SCROLL AREA
+   ========================================================= */
+
+/**
+ * This is the only scrollbar for both simulation datasets.
+ */
+.comparison-unified-scroll {
+    width:
+        100%;
+
+    max-width:
+        100%;
+
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    max-height:
+        500px;
+
+    overflow-x:
+        auto;
+
+    overflow-y:
+        auto;
+
+    background:
+        #07111f;
+
+    scrollbar-gutter:
+        stable both-edges;
+
+    overscroll-behavior:
+        contain;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.comparison-unified-scroll::-webkit-scrollbar {
+    width:
+        13px;
+
+    height:
+        13px;
+}
+
+
+.comparison-unified-scroll::-webkit-scrollbar-track {
+    background:
+        #0a1424;
+}
+
+
+.comparison-unified-scroll::-webkit-scrollbar-thumb {
+    border:
+        2px solid #0a1424;
+
+    border-radius:
+        999px;
+
+    background:
+        #53677f;
+}
+
+
+.comparison-unified-scroll::-webkit-scrollbar-thumb:hover {
+    background:
+        #71869f;
+}
+
+
+/* =========================================================
+   UNIFIED TABLE
+   ========================================================= */
+
+.comparison-unified-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    color: #e8f0fa;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.comparison-unified-table th,
+.comparison-unified-table td {
+    min-width: 100px;
+    padding: 12px 16px;
+    border-right: 1px solid rgba(148, 163, 184, 0.10);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+    white-space: nowrap;
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.comparison-unified-table thead th {
+    position: sticky;
+    z-index: 5;
+    background: #10243d;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+/* table header row. */
+.comparison-unified-column-header th {
+    top: 0;
+    z-index: 5;
+    background: #0f2742;
+}
+
+/**
+ * Visually separates the left and right simulation datasets across the full table height.
+ */
+.comparison-right-divider {
+    border-left: 3px solid rgba(14, 179, 247, 0.72) !important;
+}
+
+/* =========================================================
+   STICKY ID COLUMN
+   ========================================================= */
+
+.comparison-unified-identity-header,
+.comparison-unified-identity {
+    position: sticky;
+    left: 0;
+    min-width: 45px !important;
+    max-width: 65px;
+    text-align: center !important;
+    background: #006eff43 !important;
+    color: #f8fafc !important;
+    font-weight: 750;
+}
+
+.comparison-unified-identity-header {
+    z-index: 9;
+}
+
+.comparison-unified-identity {
+    z-index: 4;
+    color: #d3dfec !important;
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    letter-spacing:
+        0.01em;
+}
+
+/* =========================================================
+   SHARED CONTEXT COLUMNS
+   ========================================================= */
+
+/*
+ * Shared-context fields describe topology that is common
+ * to both simulations. They are therefore rendered once
+ * between Match and the Left/Right metric groups.
+ */
+.comparison-unified-shared-header {
+    min-width:
+        55px !important;
+
+    text-align:
+        center !important;
+
+    vertical-align:
+        middle !important;
+
+    background:
+        #0e2946 !important;
+
+    color:
+        #b9ddf7 !important;
+
+    font-weight:
+        750;
+}
+
+
+.comparison-unified-shared {
+    min-width:
+        55px !important;
+
+    text-align:
+        center !important;
+
+    color:
+        #f5e678 !important;
+
+    font-weight:
+        650;
+}
+
+.comparison-unified-shared.mismatch {
+    border-left:
+        2px solid rgba(245, 158, 11, 0.58);
+
+    background:
+        rgba(245, 158, 11, 0.09) !important;
+
+    color:
+        #fbbf24 !important;
+}
+
+.comparison-unified-identity-header,
+.comparison-unified-identity {
+    position:
+        sticky;
+
+    left:
+        0;
+
+    min-width:
+        45px !important;
+
+    max-width:
+        130px;
+
+    text-align:
+        center !important;
+
+    background:
+        #0b3158 !important;
+
+    color:
+        #f8fafc !important;
+
+    font-weight:
+        750;
+}
+
+
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.comparison-unified-table tbody td {
+    color: #dfe9f5;
+    background: rgba(7, 17, 31, 0.30);
+    font-size: 14px;
+}
+
+.comparison-unified-table tbody tr:nth-child(even) td {
+    background: rgba(20, 38, 61, 0.38);
+}
+
+.comparison-unified-table tbody tr:hover td {
+    background: #14304d;
+}
+
+.comparison-unified-table tbody tr:nth-child(even) td:not(.positive):not(.negative) {
+    background-color: rgba(20, 38, 61, 0.34);
+}
+
+/*Missing cells are intentionally visible.*/
+.comparison-unified-table td.missing {
+    background: rgba(245, 158, 11, 0.09) !important;
+    color: #b8c6d5 !important;
+    font-style: italic;
+}
+
+/* =========================================================
+   SNAPSHOT BANNERS
+   ========================================================= */
+
+.comparison-snapshot-banner {
+    display: flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    margin:
+        0 20px;
+
+    padding:
+        13px 16px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.18);
+
+    border-radius:
+        10px;
+
+    background:
+        #0b1728;
+
+    color:
+        #a6b6c8;
+
+    font-size:
+        14px;
+}
+
+
+.comparison-snapshot-banner strong {
+    color:
+        #f8fafc;
+}
+
+
+.comparison-snapshot-banner.safe {
+    border-color:
+        rgba(52, 211, 153, 0.36);
+
+    background:
+        rgba(6, 78, 59, 0.24);
+}
+
+
+.comparison-snapshot-banner.safe strong {
+    color:
+        #6ee7b7;
+}
+
+
+.comparison-snapshot-banner.warning {
+    border-color:
+        rgba(245, 158, 11, 0.34);
+
+    background:
+        rgba(120, 53, 15, 0.22);
+}
+
+
+.comparison-snapshot-banner.warning strong {
+    color:
+        #fbbf24;
+}
+
+
+/* =========================================================
+   NUMERIC COMPARISON PANEL
+   ========================================================= */
+
+.comparison-metric-panel {
+    margin:
+        0 20px 20px;
+
+    padding:
+        18px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.18);
+
+    border-radius:
+        14px;
+
+    background:
+        #081526;
+}
+
+
+.comparison-metric-header h3 {
+    margin: 0;
+
+    color:
+        #f8fafc;
+
+    font-size:
+        18px;
+
+    font-weight:
+        750;
+}
+
+
+.comparison-metric-header p {
+    margin:
+        5px 0 0;
+
+    color:
+        #96a8bc;
+
+    font-size:
+        14px;
+
+    line-height:
+        1.45;
+}
+
+
+/* =========================================================
+   NUMERIC CONTROLS
+   ========================================================= */
+
+.comparison-metric-controls {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3,
+            minmax(0, 1fr));
+
+    gap:
+        12px;
+
+    margin-top:
+        14px;
+}
+
+
+.comparison-metric-controls label {
+    min-width: 0;
+
+    display:
+        grid;
+
+    gap:
+        6px;
+}
+
+
+.comparison-metric-controls label>span {
+    color:
+        #a9b9cb;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+}
+
+
+.comparison-metric-controls select {
+    width:
+        100%;
+
+    min-width:
+        0;
+
+    height:
+        44px;
+
+    padding:
+        0 36px 0 13px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.26);
+
+    border-radius:
+        9px;
+
+    background:
+        #101b2f;
+
+    color:
+        #eef4fb;
+
+    font-size:
+        15px;
+}
+
+
+/* =========================================================
+   MATCH SUMMARY
+   ========================================================= */
+
+.comparison-match-summary {
+    display: flex;
+
+    align-items:
+        center;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        14px;
+
+    margin-top:
+        12px;
+
+    color:
+        #9db0c4;
+
+    font-size:
+        13px;
+}
+
+
+.comparison-match-summary strong {
+    color:
+        #f8fafc;
+}
+
+
+/* =========================================================
+   CALCULATION NOTE
+   ========================================================= */
+
+.comparison-calculation-note {
+    margin-top:
+        12px;
+
+    color:
+        #8fa2b8;
+
+    font-size:
+        13px;
+
+    font-style:
+        italic;
+
+    line-height:
+        1.5;
+}
+
+
+/* =========================================================
+   NUMERIC RESULT TABLE
+   ========================================================= */
+
+.comparison-result-scroll {
+    width:
+        100%;
+
+    max-height:
+        360px;
+
+    margin-top:
+        14px;
+
+    overflow-x:
+        auto;
+
+    overflow-y:
+        auto;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.16);
+
+    border-radius:
+        10px;
+
+    scrollbar-gutter:
+        stable;
+}
+
+
+.comparison-result-table {
+    width:
+        max-content;
+
+    min-width:
+        100%;
+
+    border-collapse:
+        separate;
+
+    border-spacing:
+        0;
+
+    font-size:
+        14px;
+}
+
+
+.comparison-result-table th,
+.comparison-result-table td {
+    padding:
+        12px 15px;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.10);
+
+    white-space:
+        nowrap;
+
+    text-align:
+        right;
+}
+
+
+.comparison-result-table th:first-child,
+.comparison-result-table td:first-child {
+    text-align:
+        center;
+}
+
+
+.comparison-result-table th {
+    position:
+        sticky;
+
+    top:
+        0;
+
+    z-index:
+        2;
+
+    background:
+        #10243d;
+
+    color:
+        #f8fafc;
+
+    font-size:
+        14px;
+
+    font-weight:
+        750;
+}
+
+
+.comparison-result-table td {
+    background:
+        #081423;
+
+    color:
+        #dce7f4;
+}
+
+
+.comparison-result-table tbody tr:nth-child(even) td {
+    background:
+        #0b192b;
+}
+
+
+.comparison-result-table tbody tr:hover td {
+    background:
+        #14304d;
+}
+
+
+.comparison-result-table td.positive {
+    color:
+        #6ee7b7;
+}
+
+
+.comparison-result-table td.negative {
+    color:
+        #fca5a5;
+}
+
+
+.comparison-result-table td.neutral {
+    color:
+        #a5b4c5;
+}
+
+/* =========================================================
+   COMPARISON EXECUTION SUMMARY
+   ========================================================= */
+
+.comparison-run-summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2,
+            minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 12px;
+}
+
+.comparison-run-summary {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 9px;
+
+    padding:
+        11px 12px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.13);
+
+    border-radius:
+        11px;
+
+    background:
+        rgba(7, 17, 31, 0.60);
+}
+
+
+.comparison-run-summary.left {
+    border-top:
+        2px solid rgba(56, 189, 248, 0.62);
+}
+
+
+.comparison-run-summary.right {
+    border-top:
+        2px solid rgba(167, 139, 250, 0.62);
+}
+
+.comparison-run-summary__header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content:
+        space-between;
+
+    gap: 10px;
+}
+
+
+.comparison-run-summary__header>div {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 2px;
+}
+
+.comparison-run-summary__identity {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 2px;
+}
+
+
+.comparison-run-summary__side {
+    color:
+        var(--color-muted);
+
+    font-size: 7px;
+
+    font-weight: 800;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        0.08em;
+}
+
+
+.comparison-run-summary__title-line {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+}
+
+
+.comparison-run-summary__title {
+    flex: 0 0 auto;
+
+    color:
+        var(--color-text-strong);
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+
+.comparison-run-summary__input-file {
+    min-width: 0;
+
+    max-width: 320px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color:
+        var(--color-muted);
+
+    font-size: 9px;
+
+    font-weight: 500;
+}
+
+.comparison-config-badge {
+    flex: 0 0 auto;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 23px;
+
+    padding:
+        0 8px;
+
+    border-radius:
+        999px;
+
+    font-size: 7px;
+
+    font-weight: 850;
+
+    text-transform:
+        uppercase;
+}
+
+
+.comparison-config-badge.manual {
+    border:
+        1px solid rgba(245, 158, 11, 0.24);
+
+    background:
+        rgba(245, 158, 11, 0.07);
+
+    color:
+        #fbbf24;
+}
+
+
+.comparison-config-badge.default {
+    border:
+        1px solid rgba(34, 197, 94, 0.24);
+
+    background:
+        rgba(34, 197, 94, 0.07);
+
+    color:
+        #86efac;
+}
+
+.comparison-run-summary__parameters {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2,
+            minmax(0, 1fr));
+
+    gap: 6px;
+}
+
+.comparison-run-parameter {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 3px;
+
+    padding:
+        7px 8px;
+
+    border-radius:
+        7px;
+
+    background:
+        rgba(148, 163, 184, 0.035);
+}
+
+
+.comparison-run-parameter>span {
+    color:
+        var(--color-muted);
+
+    font-size:
+        7px;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        0.04em;
+}
+
+.comparison-run-parameter>strong,
+.comparison-run-parameter__value {
+    color: #fbbf24;
+    font-size: 10px;
+    font-weight: 760;
+}
+
+.comparison-revision-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.comparison-revision-summary>div {
+    display: grid;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+}
+
+.comparison-revision-details {
+    margin-top: 10px;
+}
+
+.comparison-revision-details summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.comparison-compatibility-warnings {
+    display: grid;
+    gap: 6px;
+}
+
+.comparison-alignment-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.28);
+    color: var(--color-muted);
+    font-size: 10px;
+}
+
+.comparison-alignment-summary strong {
+    color: var(--color-text-strong);
+}
+
+.comparison-unified-match-cell {
+    display: grid;
+    gap: 4px;
+}
+
+.comparison-unified-match-cell>strong {
+    color: var(--color-text-strong);
+}
+
+.comparison-match-status {
+    width: fit-content;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.comparison-match-status--matched {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.10);
+    border: 1px solid rgba(34, 197, 94, 0.20);
+}
+
+.comparison-match-status--left_only {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.10);
+    border: 1px solid rgba(245, 158, 11, 0.20);
+}
+
+.comparison-match-status--right-only {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.10);
+    border: 1px solid rgba(59, 130, 246, 0.20);
+}
+
+.comparison-unified-row--left-only {
+    background: rgba(245, 158, 11, 0.025);
+}
+
+.comparison-unified-row--right-only {
+    background: rgba(59, 130, 246, 0.025);
+}
+
+.comparison-sort-button {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    cursor: pointer;
+}
+
+.comparison-sort-button:hover {
+    color: var(--color-text-strong);
+}
+
+.comparison-sort-button:focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.comparison-shared-context-mismatch {
+    color: #fbbf24;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.06);
+}
+
+.comparison-unified-side-header {
+    text-align: center;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.comparison-unified-side-header--left {
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.08);
+}
+
+.comparison-unified-side-header--right {
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.comparison-unified-table td,
+.comparison-result-table td {
+    font-variant-numeric: tabular-nums;
+}
