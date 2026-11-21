@@ -146,6 +146,8 @@ pub struct App {
     pub ui: slint::Weak<MainWindow>,
     pub msgs: Messages,
     pub lang: i32,
+    /// Working folder: `projects/` and `db/` are in it.
+    pub base: PathBuf,
     pub files: Files,
     pub projects: Vec<OpenProject>,
     pub current: Option<usize>,
@@ -213,6 +215,7 @@ impl App {
             ui: ui.as_weak(),
             msgs: Messages::new(),
             lang,
+            base: base.clone(),
             files,
             projects: Vec::new(),
             current: None,
@@ -233,6 +236,41 @@ impl App {
         app.db_diameters = app.db_diameter_table();
         app.db_orifices = app.db_orifice_table();
         app
+    }
+
+    /// Change the working folder (File > Working Folder). Every project must
+    /// be closed first. With `remember`, the next start uses it too.
+    pub fn set_work_folder(&mut self, dir: PathBuf, remember: bool) {
+        let title = self.tr("Gui.Work_folder_title");
+        if !self.projects.is_empty() || !self.nw5.tabs.is_empty() {
+            let text = self.tr("Gui.Work_folder_close");
+            self.message(&title, &text, 0, Pending::None);
+            return;
+        }
+        if !dir.is_dir() {
+            let text = format!("{}: {}", self.tr("Gui.Error"), dir.display());
+            self.message(&title, &text, 0, Pending::None);
+            return;
+        }
+        self.files = Files::new(&dir);
+        self.nw5.dir = dir.join("projects");
+        self.db = Database::new(
+            &self.files.read_db("diameters.db"),
+            &self.files.read_db("orifices.db"),
+        );
+        self.db_diameters = self.db_diameter_table();
+        self.db_orifices = self.db_orifice_table();
+        self.base = dir;
+        let mut text = format!(
+            "{}\n{}",
+            self.tr("Gui.Work_folder_set"),
+            self.base.display()
+        );
+        if remember && let Err(e) = crate::files::write_work_folder(&self.base) {
+            text = format!("{text}\n\n{}: {e}", self.tr("Gui.Error"));
+        }
+        self.message(&title, &text, 0, Pending::None);
+        self.refresh();
     }
 
     /// Text of a message key in the current language.

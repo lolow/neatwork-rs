@@ -8,7 +8,17 @@
 cargo run --release -p neatwork-gui -- [FILE.tpo | FILE.dsg ...]
 ```
 
-The program uses the working folder as the Java program does. Projects are in `projects/` and the catalogs are in `db/`. If a catalog file is missing, the program uses the catalog of NeatWork 2024. Files on the command line open at start.
+Projects are in `projects/` and the catalogs are in `db/`, in the working folder. If a catalog file is missing, the program uses the catalog of NeatWork 2024. Files on the command line open at start.
+
+File > Working Folder... chooses the working folder. It applies to the NW4 projects, the NW5 projects and the catalogs. You must close all projects first. The program remembers the folder for the next start in the file `workfolder` of its settings folder:
+
+| System | Settings folder |
+| --- | --- |
+| Windows | `%APPDATA%\NeatWork` |
+| macOS | `~/Library/Application Support/NeatWork` |
+| Linux | `$XDG_CONFIG_HOME/neatwork`, else `~/.config/neatwork` |
+
+If no folder was chosen, or if the chosen folder no longer exists, the program uses the folder where it starts, as the Java program does. To go back to that behavior, delete the file `workfolder`.
 
 The build needs Rust 1.95 or later (for Slint 1.19). On Linux, the file chooser of the Browse button and of the HTML reports needs the XDG desktop portal or GTK 3.
 
@@ -81,6 +91,7 @@ The variable `NEATWORK_GUI_STEPS` runs interface actions at start, separated by 
 | `mdrun`, `pgclose`, `tdclose` | Run the make design, close the progress and table dialogs. |
 | `fdname=NAME`, `fdaction` | Fill the file dialog and press its action button. |
 | `nstype=N`, `nsrun` | Set the simulation type and run it. |
+| `workfolder=PATH` | Use `PATH` as the working folder for this session (it is not remembered). |
 | `wait=MS` | Wait before the next steps. |
 | `nw5new=NAME`, `nw5open=FOLDER` | Create a NW5 project in `projects/`, or open a project folder (absolute or relative to `projects/`). |
 | `nw5import=FILE` | Import a network file in the current NW5 project (the catalogue dialog of a `.tpo` is confirmed). |

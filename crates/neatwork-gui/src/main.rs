@@ -74,7 +74,10 @@ pub fn idx(i: i32) -> usize {
 
 fn main() -> Result<(), slint::PlatformError> {
     let ui = MainWindow::new()?;
-    let base = std::env::current_dir().unwrap_or_else(|_| ".".into());
+    // The folder chosen with File > Working Folder, else the current folder
+    // (as the Java program).
+    let base = files::read_work_folder()
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| ".".into()));
     let app = Rc::new(RefCell::new(App::new(&ui, base)));
     APP.with(|a| *a.borrow_mut() = Some(app.clone()));
 

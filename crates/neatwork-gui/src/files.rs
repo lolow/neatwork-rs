@@ -106,6 +106,44 @@ impl Files {
     }
 }
 
+/// Folder of the interface settings: `%APPDATA%\NeatWork` on Windows,
+/// `~/Library/Application Support/NeatWork` on macOS, else
+/// `$XDG_CONFIG_HOME/neatwork` or `~/.config/neatwork`.
+fn settings_dir() -> Option<PathBuf> {
+    let var = |k: &str| {
+        std::env::var_os(k)
+            .filter(|v| !v.is_empty())
+            .map(PathBuf::from)
+    };
+    if cfg!(windows) {
+        var("APPDATA").map(|d| d.join("NeatWork"))
+    } else if cfg!(target_os = "macos") {
+        var("HOME").map(|h| h.join("Library/Application Support/NeatWork"))
+    } else {
+        var("XDG_CONFIG_HOME")
+            .or_else(|| var("HOME").map(|h| h.join(".config")))
+            .map(|d| d.join("neatwork"))
+    }
+}
+
+/// Working folder chosen with File > Working Folder, if it still exists.
+pub fn read_work_folder() -> Option<PathBuf> {
+    let text = std::fs::read_to_string(settings_dir()?.join("workfolder")).ok()?;
+    let dir = PathBuf::from(text.trim_end_matches(['\r', '\n']));
+    dir.is_dir().then_some(dir)
+}
+
+/// Remember the working folder for the next start.
+pub fn write_work_folder(dir: &Path) -> std::io::Result<()> {
+    let settings = settings_dir()
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no settings folder"))?;
+    std::fs::create_dir_all(&settings)?;
+    std::fs::write(
+        settings.join("workfolder"),
+        format!("{}\n", dir.to_string_lossy()),
+    )
+}
+
 /// `appli.locale` of the file `neatwork.locale` in the working folder.
 pub fn read_locale() -> Option<String> {
     let text = std::fs::read_to_string("neatwork.locale").ok()?;

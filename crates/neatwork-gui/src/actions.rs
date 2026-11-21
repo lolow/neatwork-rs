@@ -37,6 +37,14 @@ impl App {
             "delete-topo" => self.open_file_dialog(FdMode::Delete, FileKind::Topo),
             "delete-design" => self.open_file_dialog(FdMode::Delete, FileKind::Design),
             "save" => self.save(),
+            "work-folder" => {
+                if let Some(dir) = rfd::FileDialog::new()
+                    .set_directory(&self.base)
+                    .pick_folder()
+                {
+                    self.set_work_folder(dir, true);
+                }
+            }
             "save-as" => {
                 if let Some(p) = self.cur() {
                     let (name, kind) = (p.name().to_string(), p.kind());
@@ -127,6 +135,9 @@ impl App {
         match key {
             "tab" => s.set_pane_tab(n),
             "menu" => self.menu(value),
+            // set the working folder without the folder chooser and without
+            // remembering it
+            "workfolder" => self.set_work_folder(value.into(), false),
             "layout" => {
                 s.set_net_layout(n);
                 self.refresh_network();

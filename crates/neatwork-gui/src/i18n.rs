@@ -81,6 +81,30 @@ const EXTRA: &[(&str, &str, &str, &str)] = &[
     ("Gui.Faucets", "Faucets", "Robinets", "Grifos"),
     ("Gui.Error", "Error", "Erreur", "Error"),
     (
+        "Gui.Work_folder",
+        "Working Folder...",
+        "Dossier de travail...",
+        "Carpeta de trabajo...",
+    ),
+    (
+        "Gui.Work_folder_title",
+        "Working folder",
+        "Dossier de travail",
+        "Carpeta de trabajo",
+    ),
+    (
+        "Gui.Work_folder_set",
+        "Projects and catalogs are now in this folder (projects/ and db/):",
+        "Les projets et les catalogues sont maintenant dans ce dossier (projects/ et db/) :",
+        "Los proyectos y los catálogos están ahora en esta carpeta (projects/ y db/):",
+    ),
+    (
+        "Gui.Work_folder_close",
+        "Close all projects before you change the working folder.",
+        "Fermez tous les projets avant de changer le dossier de travail.",
+        "Cierre todos los proyectos antes de cambiar la carpeta de trabajo.",
+    ),
+    (
         "Gui.Low",
         "below the low critical flow",
         "sous le débit critique bas",

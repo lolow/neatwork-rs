@@ -89,6 +89,11 @@ export component MainWindow inherits Window {
             }
             MenuSeparator { }
             MenuItem {
+                title: T.s("Gui.Work_folder");
+                activated => { AppState.menu("work-folder"); }
+            }
+            MenuSeparator { }
+            MenuItem {
                 title: T.s("FrameNeatwork.Close");
                 enabled: AppState.project-count > 0;
                 activated => { AppState.menu("close"); }
