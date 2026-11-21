@@ -87,7 +87,8 @@ pub struct GraphNode {
     pub required_pressure_m: Option<f64>,
     /// Mean pressure of the applied run, m (`None`: not simulated).
     pub pressure_m: Option<f64>,
-    /// The applied mean pressure is below the required pressure.
+    /// The applied minimum pressure of a terminal is below its required
+    /// pressure (python-core `simulation_service.py:218`).
     pub low_pressure: bool,
     /// Visual and file coordinates differ.
     pub layout_generated: bool,
@@ -385,9 +386,11 @@ impl GraphData {
     /// node and mean velocity per pipe.
     // PROPOSAL: NW5 does not say which per-run value the graph shows. The
     // port shows the mean pressure and mean velocity of the statistics;
-    // per-pipe flows are not part of the statistics and stay `None`. A node
-    // is in low pressure when its mean pressure is below its required
-    // pressure.
+    // per-pipe flows are not part of the statistics and stay `None`.
+    // Low pressure follows python-core (`services/simulation_service.py:218`):
+    // a terminal whose minimum pressure is below its required pressure;
+    // transit nodes are never low. A payload without the minimum uses the
+    // mean.
     pub fn apply_statistics(&mut self, statistics: &Json) {
         self.clear_results();
         let stats = statistics.get("statistics");
@@ -406,9 +409,12 @@ impl GraphData {
                 else {
                     continue;
                 };
+                let min = get_f64(&r, "minPressureM").unwrap_or(p);
+                let terminal = key == "terminalPressure";
                 if let Some(nd) = self.nodes.iter_mut().find(|nd| nd.id == id) {
                     nd.pressure_m = Some(p);
-                    nd.low_pressure = nd.required_pressure_m.is_some_and(|req| p < req);
+                    nd.low_pressure =
+                        terminal && nd.required_pressure_m.is_some_and(|req| min < req);
                 }
             }
         }

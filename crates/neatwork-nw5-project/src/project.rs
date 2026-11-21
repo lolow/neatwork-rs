@@ -240,6 +240,17 @@ fn create_dir(path: &Path) -> Result<()> {
     std::fs::create_dir_all(path).map_err(|e| io_err(path, e))
 }
 
+/// A network file converted to `.dsg` or `.tpo` on import.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ConvertedInput {
+    /// Visible name with the new extension.
+    pub name: String,
+    /// Text of the converted file.
+    pub bytes: Vec<u8>,
+    /// Warnings of the reader.
+    pub warnings: Vec<String>,
+}
+
 /// Read a `.json` (NW-json-v1 or application domain JSON) or `.inp`
 /// (EPANET) network and write it as a `.dsg` (a design) or a `.tpo` (a
 /// topography): the visible name, the file bytes and the reader warnings.
@@ -249,10 +260,7 @@ fn create_dir(path: &Path) -> Result<()> {
 // the readers of `neatwork convert`; the format of the converted file is
 // DSG for a network with pipes chosen, else TPO, so the format lock (F7)
 // applies as for a native file.
-pub fn converted_input(
-    path: &Path,
-    original: &str,
-) -> Result<Option<(String, Vec<u8>, Vec<String>)>> {
+pub fn converted_input(path: &Path, original: &str) -> Result<Option<ConvertedInput>> {
     let (stem, ext) = split_name(original);
     let ext = ext.to_ascii_lowercase();
     if ext != ".json" && ext != ".inp" {
@@ -280,11 +288,11 @@ pub fn converted_input(
     } else {
         (neatwork_nw5_io::write_tpo(&read.network), ".tpo")
     };
-    Ok(Some((
-        format!("{stem}{ext}"),
-        body.into_bytes(),
-        read.warnings,
-    )))
+    Ok(Some(ConvertedInput {
+        name: format!("{stem}{ext}"),
+        bytes: body.into_bytes(),
+        warnings: read.warnings,
+    }))
 }
 
 impl Project {
@@ -579,7 +587,7 @@ impl Project {
         }
         let original = file_name_of(path)?;
         let (original, bytes, mut warnings) = match converted_input(path, &original)? {
-            Some(converted) => converted,
+            Some(c) => (c.name, c.bytes, c.warnings),
             None => (original, Vec::new(), Vec::new()),
         };
         let format = SourceFormat::of_file(&original).ok_or_else(|| {
