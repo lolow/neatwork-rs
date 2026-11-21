@@ -4,7 +4,7 @@ import { AppState, T, ParamRow } from "state.slint";
 import { DataTable, TableToolbar } from "table.slint";
 
 // Dimmed background and a centered panel with a title bar.
-component Dialog inherits Rectangle {
+export component Dialog inherits Rectangle {
     in property <string> title;
     in property <length> panel-width: 420px;
     in property <length> panel-height: 300px;
@@ -37,7 +37,7 @@ component Dialog inherits Rectangle {
     }
 }
 
-component ButtonRow inherits HorizontalLayout {
+export component ButtonRow inherits HorizontalLayout {
     spacing: 6px;
     alignment: end;
     @children

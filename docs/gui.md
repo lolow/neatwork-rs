@@ -25,6 +25,17 @@ The interface has the windows of the Java program. `rust/GUI-SPEC.md` lists them
 
 The dialogs open over the main window and block it, as the modal Java dialogs do.
 
+## NeatWork 5 projects
+
+File > New NW5 Project, Open NW5 Project, Import Network and Delete NW5 Project work on NeatWork 5 projects (`rust/nw5/specs/app.md`, ADR-024, ADR-025). A NW5 project is a folder `projects/<name>/` managed by `neatwork-nw5-project`. It opens as a project tab with an orange mark, next to the NW4 projects. A `.tpo` or `.dsg` file opened with Open Topography, Open Design or on the command line still opens the NW4 windows.
+
+- Import Network takes a `.tpo`, `.dsg`, NW-json or application `.json`, or EPANET `.inp` file (native file chooser). JSON and INP files are converted to `.dsg` (a design) or `.tpo`. A `.tpo` without `!Diameters` opens the "Complementary databases" dialog, with the catalogues found next to the file. The project accepts one source format (F7).
+- Simulation bar: Design... (NW5 design: VaR or CVaR loads, Monte Carlo loads, seed, overrides of common parameters; it runs in the background with the progress dialog and saves the result as a new `.dsg` revision), Simulation... (defaults with their source, overrides), Run, Cancel and a progress bar. One run at a time, on a background thread.
+- Tabs: Network (Visual, Raw 2D and Linear layouts, node drag in the Visual layout, inspector, Close valve / Open valve, node search, coloring by the results of the last run), Tables (read-only domain tables), Text (source file, domain JSON, NW-json), Revisions (set active, archive, export as `.tpo`, `.dsg`, NW-json, `.inp`), Simulation (run history, details, export of the statistics JSON, delete), Review (one run, four sortable result tables), Comparison (two runs, compatibility, unified table, numeric panel).
+- Help > Set global units chooses m, ft or in for the project.
+
+The NW5 texts have `Nw5.*` keys in `src/i18n.rs`. They are in English for the three languages.
+
 ## Network drawing
 
 The Network tab is new. It draws the nodes and the pipes of the project.
@@ -71,6 +82,19 @@ The variable `NEATWORK_GUI_STEPS` runs interface actions at start, separated by 
 | `fdname=NAME`, `fdaction` | Fill the file dialog and press its action button. |
 | `nstype=N`, `nsrun` | Set the simulation type and run it. |
 | `wait=MS` | Wait before the next steps. |
+| `nw5new=NAME`, `nw5open=FOLDER` | Create a NW5 project in `projects/`, or open a project folder (absolute or relative to `projects/`). |
+| `nw5import=FILE` | Import a network file in the current NW5 project (the catalogue dialog of a `.tpo` is confirmed). |
+| `nw5tab=N` | Select a workspace tab: 0 Network, 1 Tables, 2 Text, 3 Revisions, 4 Simulation, 5 Review, 6 Comparison. |
+| `nw5table=N`, `nw5text=N`, `nw5layout=N`, `nw5zoom=Z` | Select a domain table, a text view (0 source, 1 JSON, 2 NW-json), a layout (0 Visual, 1 Raw 2D, 2 Linear), a zoom. |
+| `nw5select=NODE`, `nw5edge=ARC`, `nw5details` | Search and select a node, select an arc, toggle Show Details. |
+| `nw5valve=ARC` | Open or close an arc (stored in `graph.json`). |
+| `nw5design`, `nw5design=var`, `nw5design=cvar` | Run the NW5 design with the dialog values. Then `pgclose` shows the result. |
+| `nw5save`, `nw5save=NAME` | Save the design as the next revision, or under a custom name. |
+| `nw5active=FILE`, `nw5units=m\|ft\|in` | Set the active revision, the display unit. |
+| `nw5configure`, `nw5run=NBSIM:SEED` | Open the simulation dialog; start a run with a scenario count and a seed. |
+| `nw5review=RUN`, `nw5reviewtable=N`, `nw5compare=A:B` | Show the review of a run, a review table, the comparison of two runs. |
+| `nw5details=RUN`, `nw5export=RUN:FILE` | Show the execution details of a run; export its statistics JSON to a file (no dialog). |
+| `nw5menu=ACTION`, `nw5close` | Run a NW5 menu action (`nw5-new`, `nw5-open`, `nw5-units`, ...); close the NW5 dialogs. |
 
 For example, these steps make a design of El_Bihajua with every catalog row and save it as `GuiDesign`:
 
@@ -78,5 +102,14 @@ For example, these steps make a design of El_Bihajua with every catalog row and 
 NEATWORK_GUI_STEPS="menu=start-design;action=20:select-all;action=21:select-all;mdrun;wait=2500;pgclose;tdclose;menu=save;fdname=GuiDesign;fdaction" \
   neatwork-gui projects/El_Bihajua.tpo
 ```
+
+These steps make a NW5 project from Ceiba, design it (revision 2), run 200 scenarios with seed 1 and export the statistics:
+
+```sh
+NEATWORK_GUI_STEPS="nw5new=Ceiba demo;nw5import=reference/neatwork5/examples/tpo_examples/Ceiba/Ceiba.tpo;nw5design;wait=2500;pgclose;nw5save;nw5run=200:1;wait=3000;nw5export=1:stats.json" \
+  neatwork-gui
+```
+
+On 2026-11-21, the exported statistics were equal to the payload of `neatwork-nw5-project` for the same revision and options (test `ceiba_design_revision_and_run`), except the measured duration `summary.durationSeconds`.
 
 On 2026-11-20, the design saved this way and a tap-by-tap simulation started from the interface were byte-identical to the files of the command line.

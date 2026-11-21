@@ -84,6 +84,10 @@ pub enum Pending {
     NewOverwrite(String),
     /// Save as over an existing file.
     SaveOverwrite(String),
+    /// Archive a NW5 revision (F11).
+    Nw5ArchiveRevision(String),
+    /// Delete a NW5 run (F39).
+    Nw5DeleteRun(u32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -131,6 +135,11 @@ pub enum Finished {
         project: usize,
         result: Result<String, String>,
     },
+    /// NW5 design of the NW5 tab `tab`.
+    Nw5Design {
+        tab: u64,
+        result: Result<Box<crate::nw5::DesignOutcome>, String>,
+    },
 }
 
 pub struct App {
@@ -153,6 +162,8 @@ pub struct App {
     pub finished: Option<Finished>,
     /// After the pressure table of a design: the design to add.
     pub design_to_add: Option<Design>,
+    /// NeatWork 5 project tabs and dialogs.
+    pub nw5: crate::nw5::Nw5State,
 }
 
 /// Parameters of the make-design dialog (`ParametersPane`): header keys and
@@ -193,6 +204,7 @@ impl App {
     pub fn new(ui: &MainWindow, base: PathBuf) -> Self {
         let lang = crate::files::read_locale().map_or(i18n::EN, |c| i18n::lang_from_code(&c));
         let files = Files::new(&base);
+        let nw5 = crate::nw5::Nw5State::new(base.join("projects"));
         let db = Database::new(
             &files.read_db("diameters.db"),
             &files.read_db("orifices.db"),
@@ -216,6 +228,7 @@ impl App {
             dialog_table: Table::default(),
             finished: None,
             design_to_add: None,
+            nw5,
         };
         app.db_diameters = app.db_diameter_table();
         app.db_orifices = app.db_orifice_table();
@@ -601,36 +614,45 @@ impl App {
         };
         let s = ui.global::<AppState>();
         ui.global::<T>().set_lang(self.lang);
-        let tabs: Vec<ProjectTab> = self
+        let tab = |name: &str, kind: i32| {
+            let short = if name.chars().count() > 15 {
+                name.chars().take(13).collect::<String>() + "..."
+            } else {
+                name.to_string()
+            };
+            ProjectTab {
+                title: sstr(&short),
+                tooltip: sstr(name),
+                kind,
+            }
+        };
+        let mut tabs: Vec<ProjectTab> = self
             .projects
             .iter()
-            .map(|p| {
-                let name = p.name();
-                let short = if name.chars().count() > 15 {
-                    name.chars().take(13).collect::<String>() + "..."
-                } else {
-                    name.to_string()
-                };
-                ProjectTab {
-                    title: sstr(&short),
-                    tooltip: sstr(name),
-                    kind: i32::from(p.kind() == FileKind::Design),
-                }
-            })
+            .map(|p| tab(p.name(), i32::from(p.kind() == FileKind::Design)))
             .collect();
+        // NW5 project tabs follow the NW4 projects (kind 2)
+        tabs.extend(self.nw5.tabs.iter().map(|t| tab(t.project.name(), 2)));
+        s.set_project_count(tabs.len() as i32);
         s.set_projects(ModelRc::new(VecModel::from(tabs)));
-        s.set_project_count(self.projects.len() as i32);
-        s.set_current(self.current.map_or(-1, |c| c as i32));
-        s.set_current_kind(
-            self.cur()
-                .map_or(-1, |p| i32::from(p.kind() == FileKind::Design)),
-        );
+        let nw5 = self.nw5_cur().and(self.nw5.current);
+        s.set_current(match (self.current, nw5) {
+            (Some(c), _) => c as i32,
+            (None, Some(k)) => (self.projects.len() + k) as i32,
+            _ => -1,
+        });
+        s.set_current_kind(match (self.cur(), nw5) {
+            (Some(p), _) => i32::from(p.kind() == FileKind::Design),
+            (None, Some(_)) => 2,
+            _ => -1,
+        });
         s.set_diameter_choices(strings(self.diameter_choices()));
         self.refresh_tables();
         self.refresh_text();
         self.refresh_tree();
         self.refresh_network();
         self.refresh_simulations();
+        self.refresh_nw5();
     }
 
     pub fn refresh_tables(&self) {

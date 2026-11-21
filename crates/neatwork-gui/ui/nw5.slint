@@ -1,0 +1,1080 @@
+// Workspace of a NeatWork 5 project (rust/nw5/specs/app.md): simulation
+// bar, network, tables, text, revisions, runs, review and comparison.
+import { Button, LineEdit, ComboBox, CheckBox, TabWidget, TextEdit, ScrollView, ProgressIndicator, HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { T } from "state.slint";
+import { Nw5, Nw5Table, Nw5Pair } from "nw5_state.slint";
+
+// Colors of the NW5 dark data views (F56).
+global Nw5Colors {
+    out property <color> background: #07111f;
+    out property <color> soft: #0b1628;
+    out property <color> canvas: #08182d;
+    out property <color> head: #102540;
+    out property <color> line: #1e3a5f;
+    out property <color> text: #e5f6ff;
+    out property <color> muted: #94a3b8;
+    out property <color> accent: #38bdf8;
+}
+
+// Read-only table on a dark background; a header click can sort.
+export component Nw5Grid inherits Rectangle {
+    in property <Nw5Table> data;
+    in property <bool> sortable;
+    callback header-clicked(int);
+    property <length> row-h: 22px;
+    property <length> head-h: 26px;
+    background: Nw5Colors.soft;
+    border-width: 1px;
+    border-color: Nw5Colors.line;
+    clip: true;
+    Rectangle {
+        y: 0;
+        height: root.head-h;
+        background: Nw5Colors.head;
+        clip: true;
+        Rectangle {
+            x: sv.content-x;
+            width: root.data.width;
+            for col[c] in root.data.columns: Rectangle {
+                x: col.x;
+                width: col.width;
+                border-width: 1px;
+                border-color: Nw5Colors.line;
+                background: ta.has-hover && root.sortable ? #18355a : transparent;
+                Text {
+                    x: 4px;
+                    width: parent.width - 8px;
+                    text: col.title;
+                    color: Nw5Colors.text;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+                ta := TouchArea {
+                    enabled: root.sortable;
+                    clicked => { root.header-clicked(c); }
+                }
+            }
+        }
+    }
+    sv := ScrollView {
+        y: root.head-h;
+        height: root.height - root.head-h;
+        content-width: root.data.width;
+        content-height: root.data.rows.length * root.row-h;
+        for row[r] in root.data.rows: Rectangle {
+            y: r * root.row-h;
+            height: root.row-h;
+            width: root.data.width;
+            background: row.tint;
+            for cell[c] in row.cells: Rectangle {
+                x: root.data.columns[c].x;
+                width: root.data.columns[c].width;
+                background: cell.bg;
+                border-width: 1px;
+                border-color: #13243b;
+                Text {
+                    x: 4px;
+                    width: parent.width - 8px;
+                    text: cell.text;
+                    color: cell.fg;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}
+
+// Small "label: value" lines.
+component PairList inherits VerticalLayout {
+    in property <[Nw5Pair]> rows;
+    in property <length> key-width: 130px;
+    spacing: 2px;
+    for p in root.rows: HorizontalLayout {
+        spacing: 6px;
+        Text {
+            width: root.key-width;
+            text: p.key;
+            color: #555;
+        }
+        Text {
+            text: p.value;
+            wrap: word-wrap;
+            horizontal-stretch: 1;
+        }
+    }
+}
+
+component Legend inherits HorizontalLayout {
+    spacing: 10px;
+    for c[i] in [#38bdf8, #f59e0b, #22c55e]: HorizontalLayout {
+        spacing: 4px;
+        Rectangle {
+            width: 10px;
+            height: 10px;
+            y: 4px;
+            border-radius: 5px;
+            background: c;
+        }
+        Text {
+            text: i == 0 ? T.s("Nw5.Source") : i == 1 ? T.s("Nw5.Junction") : T.s("Nw5.Terminal");
+            vertical-alignment: center;
+        }
+    }
+}
+
+// ---------------------------------------------------------------- network
+
+component Nw5NetworkView inherits HorizontalLayout {
+    property <float> scale: Nw5.zoom;
+    property <length> margin: 40px;
+    property <bool> auto-fit: true;
+    pure function fit-zoom() -> float {
+        return clamp(min((sv.visible-width - 2 * root.margin) / (Nw5.net-width * 1px),
+                         (sv.visible-height - 2 * root.margin) / (Nw5.net-height * 1px)), 0.02, 40);
+    }
+    function fit() {
+        Nw5.zoom = root.fit-zoom();
+    }
+    property <float> world-size: Nw5.net-width * 100000 + Nw5.net-height + Nw5.layout;
+    changed world-size => {
+        root.fit();
+    }
+    property <length> visible-size: sv.visible-width * 3 + sv.visible-height;
+    changed visible-size => {
+        if (root.auto-fit) {
+            root.fit();
+        }
+    }
+    property <int> focus-serial: Nw5.focus-serial;
+    changed focus-serial => {
+        sv.content-x = -max(0px, min(root.margin + Nw5.focus-x * 1px * root.scale - sv.visible-width / 2, sv.content-width - sv.visible-width));
+        sv.content-y = -max(0px, min(root.margin + Nw5.focus-y * 1px * root.scale - sv.visible-height / 2, sv.content-height - sv.visible-height));
+    }
+    spacing: 6px;
+    VerticalLayout {
+        spacing: 4px;
+        HorizontalLayout {
+            spacing: 6px;
+            ComboBox {
+                model: [T.s("Nw5.Visual_graph"), T.s("Nw5.Raw_graph"), T.s("Nw5.Linear_graph")];
+                current-index <=> Nw5.layout;
+                selected => {
+                    root.auto-fit = true;
+                    Nw5.view-changed();
+                }
+            }
+            CheckBox {
+                text: T.s("Nw5.Show_details");
+                checked <=> Nw5.show-details;
+                toggled => { Nw5.view-changed(); }
+            }
+            CheckBox {
+                text: Nw5.results-label;
+                enabled: Nw5.results-label != T.s("Nw5.No_results");
+                checked <=> Nw5.show-results;
+                toggled => { Nw5.view-changed(); }
+            }
+            Button {
+                text: "−";
+                clicked => {
+                    root.auto-fit = false;
+                    Nw5.zoom = clamp(Nw5.zoom * 0.8, 0.02, 40);
+                }
+            }
+            Button {
+                text: T.s("Gui.Fit");
+                clicked => {
+                    root.auto-fit = true;
+                    root.fit();
+                }
+            }
+            Button {
+                text: "+";
+                clicked => {
+                    root.auto-fit = false;
+                    Nw5.zoom = clamp(Nw5.zoom * 1.25, 0.02, 40);
+                }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            search := LineEdit {
+                width: 150px;
+                placeholder-text: T.s("Nw5.Search_node");
+                accepted(t) => { Nw5.search(t); }
+            }
+            Button {
+                text: T.s("Nw5.Find");
+                clicked => { Nw5.search(search.text); }
+            }
+        }
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: Nw5.net-header;
+                font-weight: 700;
+            }
+            Text {
+                text: Nw5.net-note;
+                color: #666;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            Text {
+                text: Nw5.search-message;
+                color: #b45309;
+            }
+        }
+        Rectangle {
+            background: Nw5Colors.canvas;
+            border-width: 1px;
+            border-color: #333;
+            sv := ScrollView {
+                content-width: Nw5.net-width * 1px * root.scale + 2 * root.margin;
+                content-height: Nw5.net-height * 1px * root.scale + 2 * root.margin;
+                canvas := TouchArea {
+                    clicked => {
+                        Nw5.canvas-clicked((self.pressed-x - root.margin) / 1px / root.scale, (self.pressed-y - root.margin) / 1px / root.scale);
+                    }
+                    scroll-event(ev) => {
+                        if (ev.modifiers.control) {
+                            root.auto-fit = false;
+                            Nw5.zoom = clamp(Nw5.zoom * (ev.delta-y > 0 ? 1.15 : 1 / 1.15), 0.02, 40);
+                            return accept;
+                        }
+                        return reject;
+                    }
+                }
+                for e in Nw5.edges: Path {
+                    x: root.margin;
+                    y: root.margin;
+                    width: Nw5.net-width * 1px * root.scale;
+                    height: Nw5.net-height * 1px * root.scale;
+                    viewbox-x: 0;
+                    viewbox-y: 0;
+                    viewbox-width: Nw5.net-width;
+                    viewbox-height: Nw5.net-height;
+                    stroke: e.color;
+                    stroke-width: e.width * 1px;
+                    MoveTo { x: e.x1; y: e.y1; }
+                    LineTo { x: e.x2; y: e.y2; }
+                }
+                for e in Nw5.edges: Rectangle {
+                    x: root.margin + (e.x1 + e.x2) / 2 * 1px * root.scale - 6px;
+                    y: root.margin + (e.y1 + e.y2) / 2 * 1px * root.scale - 6px;
+                    width: 12px;
+                    height: 12px;
+                    if e.valve: Rectangle {
+                        background: e.open ? #22c55e : #ef4444;
+                        border-width: 1px;
+                        border-color: #e5f6ff;
+                    }
+                    if (Nw5.show-details || e.selected) && e.label != "": Text {
+                        x: 14px;
+                        y: 0;
+                        text: e.label;
+                        color: #7dd3fc;
+                        font-size: 10px;
+                    }
+                }
+                for n[i] in Nw5.nodes: node := Rectangle {
+                    property <length> hit: max(n.radius * 1px + 4px, 10px);
+                    property <length> dx;
+                    property <length> dy;
+                    property <bool> dragged;
+                    x: root.margin + n.x * 1px * root.scale - self.hit + self.dx;
+                    y: root.margin + n.y * 1px * root.scale - self.hit + self.dy;
+                    width: 2 * self.hit;
+                    height: 2 * self.hit;
+                    if n.flash: Rectangle {
+                        width: 2 * n.radius * 1px + 12px;
+                        height: self.width;
+                        border-radius: self.width / 2;
+                        background: #f472b660;
+                    }
+                    Rectangle {
+                        width: 2 * n.radius * 1px;
+                        height: self.width;
+                        border-radius: self.width / 2;
+                        background: n.flash ? #f472b6 : n.color;
+                        border-width: n.selected ? 2px : 0px;
+                        border-color: #ffffff;
+                    }
+                    if n.selected || n.flash || Nw5.show-details || root.scale >= Nw5.label-zoom: Text {
+                        x: node.width - 2px;
+                        y: -4px;
+                        text: Nw5.show-details && n.details != "" ? n.label + "  " + n.details : n.label;
+                        color: n.flash ? #f472b6 : #e5f6ff;
+                        font-size: 11px;
+                    }
+                    TouchArea {
+                        mouse-cursor: Nw5.layout == 0 ? MouseCursor.move : MouseCursor.pointer;
+                        pointer-event(ev) => {
+                            if (ev.kind == PointerEventKind.down) {
+                                node.dragged = false;
+                            }
+                            if (ev.kind == PointerEventKind.up && ev.button == PointerEventButton.left) {
+                                if (node.dragged) {
+                                    Nw5.node-dragged(i, node.dx / 1px / root.scale, node.dy / 1px / root.scale);
+                                }
+                                node.dx = 0;
+                                node.dy = 0;
+                            }
+                        }
+                        moved => {
+                            if (Nw5.layout == 0) {
+                                node.dx += self.mouse-x - self.pressed-x;
+                                node.dy += self.mouse-y - self.pressed-y;
+                                if (abs(node.dx) > 2px || abs(node.dy) > 2px) {
+                                    node.dragged = true;
+                                }
+                            }
+                        }
+                        clicked => {
+                            if (!node.dragged) {
+                                Nw5.node-clicked(i);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    VerticalLayout {
+        width: 270px;
+        spacing: 4px;
+        Text {
+            text: T.s("Gui.Legend");
+            font-weight: 700;
+        }
+        for label[i] in Nw5.legend-labels: HorizontalLayout {
+            spacing: 6px;
+            Rectangle {
+                width: 12px;
+                height: 12px;
+                border-radius: 6px;
+                background: Nw5.legend-colors[i];
+            }
+            Text {
+                text: label;
+                vertical-alignment: center;
+            }
+        }
+        Rectangle { height: 8px; }
+        if Nw5.inspector-kind > 0: Rectangle {
+            border-width: 1px;
+            border-color: #999;
+            background: #fafafa;
+            VerticalBox {
+                HorizontalLayout {
+                    Text {
+                        text: Nw5.inspector-title;
+                        font-weight: 700;
+                        font-size: 14px;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                    }
+                    Button {
+                        text: "×";
+                        clicked => { Nw5.close-inspector(); }
+                    }
+                }
+                PairList {
+                    rows: Nw5.inspector-rows;
+                    key-width: 100px;
+                }
+                if Nw5.inspector-kind == 1: GridLayout {
+                    spacing: 4px;
+                    Row {
+                        Text {
+                            text: T.s("Nw5.Visual_x");
+                            vertical-alignment: center;
+                        }
+                        LineEdit {
+                            text <=> Nw5.inspector-x;
+                        }
+                    }
+                    Row {
+                        Text {
+                            text: T.s("Nw5.Visual_y");
+                            vertical-alignment: center;
+                        }
+                        LineEdit {
+                            text <=> Nw5.inspector-y;
+                        }
+                    }
+                    Row {
+                        Rectangle { }
+                        Button {
+                            text: T.s("Nw5.Save_position");
+                            clicked => { Nw5.save-position(); }
+                        }
+                    }
+                }
+                if Nw5.inspector-kind == 2 && Nw5.inspector-valve: Button {
+                    text: Nw5.inspector-open ? T.s("Nw5.Close_valve") : T.s("Nw5.Open_valve");
+                    primary: true;
+                    clicked => { Nw5.toggle-valve(); }
+                }
+            }
+        }
+        Rectangle { vertical-stretch: 1; }
+    }
+}
+
+// ------------------------------------------------------------------ panes
+
+component Nw5TablesPane inherits HorizontalBox {
+    VerticalLayout {
+        width: 230px;
+        spacing: 2px;
+        for name[i] in Nw5.table-names: Rectangle {
+            height: 26px;
+            background: i == Nw5.table-index ? #b8d4f0 : ta.has-hover ? #eef3f9 : transparent;
+            Text {
+                x: 6px;
+                text: name;
+                vertical-alignment: center;
+            }
+            ta := TouchArea {
+                clicked => { Nw5.table-select(i); }
+            }
+        }
+        Rectangle { vertical-stretch: 1; }
+    }
+    VerticalLayout {
+        spacing: 4px;
+        HorizontalLayout {
+            spacing: 10px;
+            Text {
+                text: Nw5.table-title;
+                font-size: 15px;
+                font-weight: 700;
+            }
+            Text {
+                text: Nw5.table-badges;
+                color: #555;
+                vertical-alignment: center;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            if Nw5.table-legend: Legend { }
+        }
+        Text {
+            text: Nw5.table-description;
+            color: #555;
+        }
+        if Nw5.table-warnings != "": Rectangle {
+            background: #fff4d6;
+            border-width: 1px;
+            border-color: #e0b040;
+            height: warn.preferred-height + 10px;
+            warn := Text {
+                x: 6px;
+                width: parent.width - 12px;
+                text: T.s("Nw5.Import_warnings") + "\n" + Nw5.table-warnings;
+                wrap: word-wrap;
+            }
+        }
+        Nw5Grid {
+            data: Nw5.table;
+            vertical-stretch: 1;
+        }
+    }
+}
+
+component Nw5TextPane inherits VerticalBox {
+    HorizontalLayout {
+        spacing: 6px;
+        Button {
+            text: T.s("Nw5.Source_file");
+            primary: Nw5.text-mode == 0;
+            clicked => {
+                Nw5.text-mode = 0;
+                Nw5.text-mode-changed();
+            }
+        }
+        Button {
+            text: T.s("Nw5.Json");
+            primary: Nw5.text-mode == 1;
+            clicked => {
+                Nw5.text-mode = 1;
+                Nw5.text-mode-changed();
+            }
+        }
+        Button {
+            text: T.s("Nw5.Nw_json");
+            primary: Nw5.text-mode == 2;
+            clicked => {
+                Nw5.text-mode = 2;
+                Nw5.text-mode-changed();
+            }
+        }
+        Text {
+            text: Nw5.text-meta;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+        Text {
+            text: Nw5.text-description;
+            color: #555;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+    }
+    TextEdit {
+        text: Nw5.text-content;
+        read-only: true;
+        font-family: "monospace";
+        vertical-stretch: 1;
+    }
+}
+
+component Nw5RevisionsPane inherits VerticalBox {
+    Text {
+        text: Nw5.format-lock;
+        font-weight: 700;
+    }
+    ScrollView {
+        vertical-stretch: 1;
+        VerticalLayout {
+            spacing: 4px;
+            alignment: start;
+            for r[i] in Nw5.revisions: Rectangle {
+                background: r.active ? #e3f0fb : #f7f7f7;
+                border-width: 1px;
+                border-color: r.active ? #3a7bd5 : #ccc;
+                HorizontalBox {
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: r.file;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: r.version + " · " + r.format;
+                            }
+                            if r.active: Text {
+                                text: T.s("Nw5.Active");
+                                color: #1d6fc4;
+                                font-weight: 700;
+                            }
+                            if r.archived: Text {
+                                text: T.s("Nw5.Archived");
+                                color: #b45309;
+                                font-weight: 700;
+                            }
+                        }
+                        Text {
+                            text: r.parent + "  " + r.created;
+                            color: #555;
+                        }
+                    }
+                    Button {
+                        text: T.s("Nw5.Set_active");
+                        enabled: !r.active;
+                        clicked => { Nw5.revision-activate(i); }
+                    }
+                    Button {
+                        text: T.s("Nw5.Archive");
+                        enabled: !r.archived;
+                        clicked => { Nw5.revision-archive(i); }
+                    }
+                    Text {
+                        text: T.s("Nw5.Export_as");
+                        vertical-alignment: center;
+                    }
+                    for f in [".tpo", ".dsg", ".json", ".inp"]: Button {
+                        text: f == ".json" ? "NW-json" : f;
+                        clicked => { Nw5.revision-export(i, f); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+component Nw5SimulationPane inherits VerticalBox {
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("Nw5.Simulation_history");
+            font-size: 15px;
+            font-weight: 700;
+        }
+        Text {
+            text: Nw5.runs.length + " " + T.s("Nw5.executions");
+            color: #555;
+            vertical-alignment: center;
+        }
+        Rectangle { horizontal-stretch: 1; }
+    }
+    ScrollView {
+        vertical-stretch: 1;
+        VerticalLayout {
+            spacing: 4px;
+            alignment: start;
+            for r in Nw5.runs: Rectangle {
+                background: #f7f7f7;
+                border-width: 1px;
+                border-color: #ccc;
+                HorizontalBox {
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: r.title;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: r.status;
+                                color: r.completed ? #15803d : r.terminal ? #b91c1c : #1d6fc4;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: r.mode;
+                                color: #555;
+                            }
+                            Text {
+                                text: r.created;
+                                color: #555;
+                            }
+                        }
+                        Text {
+                            text: r.input + "  ·  " + T.s("Nw5.Scenarios") + " " + r.scenarios + "  ·  " + T.s("Nw5.Seed") + " " + r.seed;
+                        }
+                        if r.error != "": Text {
+                            text: r.error;
+                            color: #b91c1c;
+                            wrap: word-wrap;
+                        }
+                    }
+                    Button {
+                        text: T.s("Nw5.Results");
+                        enabled: r.completed;
+                        clicked => { Nw5.run-review(r.number); }
+                    }
+                    Button {
+                        text: T.s("Nw5.Details");
+                        clicked => { Nw5.run-details(r.number); }
+                    }
+                    Button {
+                        text: T.s("Nw5.Export_json");
+                        enabled: r.completed;
+                        clicked => { Nw5.run-export(r.number); }
+                    }
+                    Button {
+                        text: T.s("Nw5.Delete");
+                        enabled: r.terminal;
+                        clicked => { Nw5.run-delete(r.number); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+component Nw5ReviewPane inherits VerticalBox {
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("Nw5.Simulation");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.review-runs;
+            current-index <=> Nw5.review-run;
+            selected => { Nw5.review-changed(); }
+        }
+        Text {
+            text: T.s("Nw5.Table");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: ["Terminal Satisfaction", "Source Flow", "Pipe Velocity", "Pressure"];
+            current-index <=> Nw5.review-kind;
+            selected => { Nw5.review-changed(); }
+        }
+        if Nw5.review-kind == 0: CheckBox {
+            text: T.s("Nw5.Show_details_columns");
+            checked <=> Nw5.review-details;
+            toggled => { Nw5.review-changed(); }
+        }
+        Rectangle { horizontal-stretch: 1; }
+    }
+    if Nw5.review-empty != "": Text {
+        text: Nw5.review-empty;
+        vertical-stretch: 1;
+    }
+    if Nw5.review-empty == "": HorizontalLayout {
+        spacing: 12px;
+        Rectangle {
+            border-width: 1px;
+            border-color: #bbb;
+            background: #fafafa;
+            width: 330px;
+            VerticalBox {
+                HorizontalLayout {
+                    spacing: 8px;
+                    Text {
+                        text: T.s("Nw5.Selected_execution") + " — " + Nw5.review-title;
+                        font-weight: 700;
+                    }
+                    Text {
+                        text: Nw5.review-badge;
+                        color: #1d6fc4;
+                    }
+                }
+                PairList {
+                    rows: Nw5.review-params;
+                }
+                Text {
+                    text: T.s("Nw5.Run_traceability");
+                    font-weight: 700;
+                }
+                PairList {
+                    rows: Nw5.review-trace;
+                }
+            }
+        }
+        VerticalLayout {
+            horizontal-stretch: 1;
+            spacing: 4px;
+            HorizontalLayout {
+                spacing: 6px;
+                height: 52px;
+                for p in Nw5.review-strip: Rectangle {
+                    background: #eef3f9;
+                    border-width: 1px;
+                    border-color: #c8d6e6;
+                    VerticalBox {
+                        padding: 4px;
+                        spacing: 0px;
+                        Text {
+                            text: p.key;
+                            color: #555;
+                            font-size: 11px;
+                        }
+                        Text {
+                            text: p.value;
+                            font-weight: 700;
+                        }
+                    }
+                }
+            }
+            Text {
+                text: T.s("Nw5.Execution_failure_records") + " · " + Nw5.review-failure-count;
+                font-weight: 700;
+            }
+            if Nw5.review-failures.rows.length > 0: Nw5Grid {
+                height: 90px;
+                data: Nw5.review-failures;
+            }
+            Text {
+                text: T.s("Nw5.Adaptive_precision");
+                color: #555;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
+        }
+    }
+    if Nw5.review-empty == "": HorizontalLayout {
+        spacing: 10px;
+        Text {
+            text: Nw5.review-table-title;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        Text {
+            text: Nw5.review-table-description;
+            color: #555;
+            vertical-alignment: center;
+        }
+        Rectangle { horizontal-stretch: 1; }
+        Text {
+            text: Nw5.review-row-count;
+            vertical-alignment: center;
+        }
+    }
+    if Nw5.review-empty == "": Nw5Grid {
+        vertical-stretch: 1;
+        data: Nw5.review-table;
+        sortable: true;
+        header-clicked(c) => { Nw5.review-sort(c); }
+    }
+}
+
+component RunCard inherits Rectangle {
+    in property <string> side;
+    in property <color> side-color;
+    in property <[Nw5Pair]> rows;
+    border-width: 1px;
+    border-color: #bbb;
+    background: #fafafa;
+    VerticalBox {
+        padding: 4px;
+        Text {
+            text: root.side;
+            font-weight: 700;
+            color: root.side-color;
+        }
+        PairList {
+            rows: root.rows;
+            key-width: 110px;
+        }
+    }
+}
+
+component Nw5ComparisonPane inherits VerticalBox {
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("Nw5.Left_simulation");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-sources;
+            current-index <=> Nw5.cmp-left;
+            selected => { Nw5.cmp-changed(); }
+        }
+        Text {
+            text: T.s("Nw5.Right_simulation");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-sources;
+            current-index <=> Nw5.cmp-right;
+            selected => { Nw5.cmp-changed(); }
+        }
+        Text {
+            text: T.s("Nw5.Table");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-tables;
+            current-index <=> Nw5.cmp-table;
+            selected => { Nw5.cmp-changed(); }
+        }
+        Rectangle { horizontal-stretch: 1; }
+    }
+    if Nw5.cmp-empty != "": Text {
+        text: Nw5.cmp-empty;
+        wrap: word-wrap;
+        vertical-stretch: 1;
+    }
+    if Nw5.cmp-empty == "": Rectangle {
+        background: Nw5.cmp-banner-color;
+        border-width: 1px;
+        border-color: #999;
+        height: banner.preferred-height + 10px;
+        banner := Text {
+            x: 6px;
+            width: parent.width - 12px;
+            text: Nw5.cmp-banner-title + " — " + Nw5.cmp-banner-text + (Nw5.cmp-warnings == "" ? "" : "\n" + Nw5.cmp-warnings) + (Nw5.cmp-changes == "" ? "" : "\n" + Nw5.cmp-changes);
+            wrap: word-wrap;
+        }
+    }
+    if Nw5.cmp-empty == "": HorizontalLayout {
+        spacing: 10px;
+        RunCard {
+            side: T.s("Nw5.Left");
+            side-color: #b45309;
+            rows: Nw5.cmp-left-card;
+        }
+        RunCard {
+            side: T.s("Nw5.Right");
+            side-color: #1d4ed8;
+            rows: Nw5.cmp-right-card;
+        }
+    }
+    if Nw5.cmp-empty == "": Text {
+        text: Nw5.cmp-counters;
+        font-weight: 700;
+    }
+    if Nw5.cmp-empty == "": Nw5Grid {
+        vertical-stretch: 3;
+        data: Nw5.cmp-unified;
+        sortable: true;
+        header-clicked(c) => { Nw5.cmp-sort(c); }
+    }
+    if Nw5.cmp-empty == "": HorizontalLayout {
+        spacing: 6px;
+        Text {
+            text: T.s("Nw5.Numeric_comparison");
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+        Text {
+            text: T.s("Nw5.Match_rows_by");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-strategies;
+            current-index <=> Nw5.cmp-strategy;
+            selected => { Nw5.cmp-metric-changed(); }
+        }
+        Text {
+            text: T.s("Nw5.Left_metric");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-metrics;
+            current-index <=> Nw5.cmp-left-metric;
+            selected => { Nw5.cmp-metric-changed(); }
+        }
+        Text {
+            text: T.s("Nw5.Right_metric");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: Nw5.cmp-metrics;
+            current-index <=> Nw5.cmp-right-metric;
+            selected => { Nw5.cmp-metric-changed(); }
+        }
+        Text {
+            text: Nw5.cmp-metric-summary;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+    }
+    if Nw5.cmp-empty == "" && Nw5.cmp-metric-warning != "": Text {
+        text: Nw5.cmp-metric-warning;
+        color: #b45309;
+        wrap: word-wrap;
+    }
+    if Nw5.cmp-empty == "": Nw5Grid {
+        vertical-stretch: 2;
+        data: Nw5.cmp-metric-table;
+    }
+}
+
+// Simulation bar (F35).
+component Nw5SimulationBar inherits HorizontalLayout {
+    spacing: 6px;
+    Button {
+        text: T.s("Nw5.Design");
+        enabled: !Nw5.running;
+        clicked => { Nw5.design(); }
+    }
+    Button {
+        text: T.s("Nw5.Configure");
+        enabled: !Nw5.running;
+        clicked => { Nw5.configure(); }
+    }
+    Button {
+        text: T.s("Nw5.Run");
+        primary: true;
+        enabled: !Nw5.running && Nw5.can-run;
+        clicked => { Nw5.run(); }
+    }
+    if Nw5.running: Button {
+        text: T.s("Nw5.Cancel");
+        clicked => { Nw5.cancel-run(); }
+    }
+    if Nw5.running: ProgressIndicator {
+        width: 160px;
+        progress: Nw5.progress;
+    }
+    Text {
+        text: Nw5.running ? Nw5.run-status : Nw5.last-summary;
+        vertical-alignment: center;
+        overflow: elide;
+        horizontal-stretch: 1;
+    }
+}
+
+export component Nw5Workspace inherits VerticalBox {
+    HorizontalLayout {
+        spacing: 10px;
+        Text {
+            text: Nw5.project-name;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        Text {
+            text: Nw5.header;
+            color: #555;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+    }
+    if Nw5.banner != "": Rectangle {
+        background: #fde2e2;
+        border-width: 1px;
+        border-color: #ef4444;
+        height: banner.preferred-height + 10px;
+        banner := Text {
+            x: 6px;
+            width: parent.width - 12px;
+            text: Nw5.banner;
+            color: #7f1d1d;
+            wrap: word-wrap;
+        }
+    }
+    if Nw5.notice != "": Text {
+        text: Nw5.notice;
+        color: #15803d;
+        wrap: word-wrap;
+    }
+    if !Nw5.has-domain: VerticalLayout {
+        alignment: center;
+        spacing: 12px;
+        vertical-stretch: 1;
+        Text {
+            text: T.s("Nw5.No_network_imported");
+            font-size: 18px;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: T.s("Nw5.Import_hint");
+            horizontal-alignment: center;
+        }
+        HorizontalLayout {
+            alignment: center;
+            Button {
+                text: T.s("Nw5.Import_network");
+                primary: true;
+                clicked => { Nw5.import-network(); }
+            }
+        }
+    }
+    if Nw5.has-domain: Nw5SimulationBar { }
+    if Nw5.has-domain: TabWidget {
+        vertical-stretch: 1;
+        current-index <=> Nw5.pane-tab;
+        Tab {
+            title: T.s("Gui.Network");
+            Nw5NetworkView { }
+        }
+        Tab {
+            title: T.s("Nw5.Tables");
+            Nw5TablesPane { }
+        }
+        Tab {
+            title: T.s("Nw5.Text");
+            Nw5TextPane { }
+        }
+        Tab {
+            title: T.s("Nw5.Revisions");
+            Nw5RevisionsPane { }
+        }
+        Tab {
+            title: T.s("Nw5.Simulation");
+            Nw5SimulationPane { }
+        }
+        Tab {
+            title: T.s("Nw5.Review");
+            Nw5ReviewPane { }
+        }
+        Tab {
+            title: T.s("Nw5.Comparison");
+            Nw5ComparisonPane { }
+        }
+    }
+}

@@ -1,0 +1,329 @@
+// Types and the global that the Rust code drives for the NeatWork 5
+// workspace (rust/nw5/specs/app.md).
+
+// Read-only table cell: text, text color and background (F28 colors).
+export struct Nw5Cell {
+    text: string,
+    fg: color,
+    bg: color,
+}
+
+export struct Nw5Row {
+    cells: [Nw5Cell],
+    // row tint (comparison: left only, right only)
+    tint: color,
+}
+
+export struct Nw5Column {
+    title: string,
+    x: length,
+    width: length,
+}
+
+export struct Nw5Table {
+    columns: [Nw5Column],
+    rows: [Nw5Row],
+    width: length,
+}
+
+// A label and its value (inspector, summaries, details).
+export struct Nw5Pair {
+    key: string,
+    value: string,
+}
+
+export struct Nw5Node {
+    x: float,
+    y: float,
+    label: string,
+    details: string,
+    color: color,
+    radius: float,
+    selected: bool,
+    flash: bool,
+}
+
+export struct Nw5Edge {
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    color: color,
+    width: float,
+    valve: bool,
+    open: bool,
+    selected: bool,
+    label: string,
+}
+
+export struct Nw5Revision {
+    file: string,
+    version: string,
+    format: string,
+    parent: string,
+    created: string,
+    active: bool,
+    archived: bool,
+}
+
+export struct Nw5Run {
+    number: int,
+    title: string,
+    status: string,
+    created: string,
+    input: string,
+    mode: string,
+    scenarios: string,
+    seed: string,
+    error: string,
+    completed: bool,
+    terminal: bool,
+}
+
+export struct Nw5ProjectItem {
+    name: string,
+    created: string,
+    open: bool,
+}
+
+// A row of the simulation configuration: option, default, source.
+export struct Nw5Option {
+    label: string,
+    value: string,
+    source: string,
+}
+
+export global Nw5 {
+    // ---- workspace of the current NW5 project
+    in property <string> project-name;
+    in property <string> header;
+    in property <string> banner;
+    in property <string> notice;
+    in property <bool> has-domain;
+    in-out property <int> pane-tab;
+    callback import-network();
+
+    // simulation bar (F35)
+    in property <bool> running;
+    in property <float> progress;
+    in property <string> run-status;
+    in property <string> last-summary;
+    in property <bool> can-run;
+    callback design();
+    callback configure();
+    callback run();
+    callback cancel-run();
+
+    // revisions (F7-F11)
+    in property <string> format-lock;
+    in property <[Nw5Revision]> revisions;
+    callback revision-activate(int);
+    callback revision-archive(int);
+    callback revision-export(int, string);
+
+    // tables (F27-F30)
+    in property <[string]> table-names;
+    in-out property <int> table-index;
+    in property <string> table-title;
+    in property <string> table-description;
+    in property <string> table-badges;
+    in property <bool> table-legend;
+    in property <string> table-warnings;
+    in property <Nw5Table> table;
+    callback table-select(int);
+
+    // network (F19-F26)
+    in property <[Nw5Node]> nodes;
+    in property <[Nw5Edge]> edges;
+    in property <float> net-width: 100;
+    in property <float> net-height: 100;
+    in property <float> label-zoom: 1;
+    in-out property <float> zoom: 1;
+    in-out property <int> layout;
+    in-out property <bool> show-details;
+    in-out property <bool> show-results: true;
+    in property <string> results-label;
+    in property <string> net-header;
+    in property <string> net-note;
+    in property <[string]> legend-labels;
+    in property <[color]> legend-colors;
+    in property <int> inspector-kind;
+    in property <string> inspector-title;
+    in property <[Nw5Pair]> inspector-rows;
+    in property <bool> inspector-valve;
+    in property <bool> inspector-open;
+    in-out property <string> inspector-x;
+    in-out property <string> inspector-y;
+    in property <string> search-message;
+    in property <float> focus-x;
+    in property <float> focus-y;
+    in property <int> focus-serial;
+    callback node-clicked(int);
+    callback canvas-clicked(float, float);
+    callback node-dragged(int, float, float);
+    callback toggle-valve();
+    callback save-position();
+    callback close-inspector();
+    callback search(string);
+    callback view-changed();
+
+    // text views (F52)
+    in-out property <int> text-mode;
+    in property <string> text-content;
+    in property <string> text-meta;
+    in property <string> text-description;
+    callback text-mode-changed();
+
+    // runs (F39-F41)
+    in property <[Nw5Run]> runs;
+    callback run-review(int);
+    callback run-details(int);
+    callback run-delete(int);
+    callback run-export(int);
+
+    // review (F42-F47)
+    in property <[string]> review-runs;
+    in-out property <int> review-run;
+    in-out property <int> review-kind;
+    in-out property <bool> review-details;
+    in property <string> review-empty;
+    in property <string> review-title;
+    in property <string> review-badge;
+    in property <[Nw5Pair]> review-params;
+    in property <[Nw5Pair]> review-trace;
+    in property <[Nw5Pair]> review-strip;
+    in property <string> review-failure-count;
+    in property <Nw5Table> review-failures;
+    in property <string> review-table-title;
+    in property <string> review-table-description;
+    in property <string> review-row-count;
+    in property <Nw5Table> review-table;
+    callback review-changed();
+    callback review-sort(int);
+
+    // comparison (F48-F51)
+    in property <[string]> cmp-sources;
+    in-out property <int> cmp-left;
+    in-out property <int> cmp-right;
+    in property <[string]> cmp-tables;
+    in-out property <int> cmp-table;
+    in property <string> cmp-empty;
+    in property <string> cmp-banner-title;
+    in property <string> cmp-banner-text;
+    in property <color> cmp-banner-color;
+    in property <string> cmp-warnings;
+    in property <string> cmp-changes;
+    in property <[Nw5Pair]> cmp-left-card;
+    in property <[Nw5Pair]> cmp-right-card;
+    in property <string> cmp-counters;
+    in property <Nw5Table> cmp-unified;
+    in property <[string]> cmp-strategies;
+    in-out property <int> cmp-strategy;
+    in property <[string]> cmp-metrics;
+    in-out property <int> cmp-left-metric;
+    in-out property <int> cmp-right-metric;
+    in property <string> cmp-metric-summary;
+    in property <string> cmp-metric-warning;
+    in property <Nw5Table> cmp-metric-table;
+    callback cmp-changed();
+    callback cmp-sort(int);
+    callback cmp-metric-changed();
+
+    // ---- dialogs
+    // new project (F4)
+    in property <bool> np-visible;
+    in-out property <string> np-name;
+    in property <string> np-error;
+    callback np-create();
+    callback np-cancel();
+
+    // open project (F5)
+    in property <bool> op-visible;
+    in-out property <string> op-search;
+    in property <[Nw5ProjectItem]> op-items;
+    in property <string> op-empty;
+    callback op-search-changed();
+    callback op-open(int);
+    callback op-delete(int);
+    callback op-close();
+
+    // delete project (F6)
+    in property <bool> dp-visible;
+    in property <string> dp-name;
+    in-out property <bool> dp-checked;
+    in property <string> dp-error;
+    callback dp-confirm();
+    callback dp-cancel();
+
+    // TPO catalogues (F15)
+    in property <bool> tc-visible;
+    in property <string> tc-file;
+    in property <string> tc-analysis;
+    in property <bool> tc-required;
+    in-out property <string> tc-diameters;
+    in-out property <string> tc-orifices;
+    in property <string> tc-error;
+    callback tc-browse-diameters();
+    callback tc-browse-orifices();
+    callback tc-import();
+    callback tc-cancel();
+
+    // design options
+    in property <bool> dd-visible;
+    in property <string> dd-input;
+    in-out property <int> dd-risk;
+    in-out property <bool> dd-monte-carlo;
+    in-out property <string> dd-seed;
+    in property <[Nw5Pair]> dd-params;
+    in property <string> dd-error;
+    callback dd-param-edited(int, string);
+    callback dd-run();
+    callback dd-cancel();
+
+    // design result and revision save (F9, F10)
+    in property <bool> dr-visible;
+    in property <string> dr-title;
+    in property <string> dr-text;
+    in property <bool> dr-ok;
+    in property <string> dr-source;
+    in-out property <int> dr-mode;
+    in property <string> dr-auto-name;
+    in-out property <string> dr-custom-name;
+    in property <string> dr-error;
+    callback dr-save();
+    callback dr-discard();
+
+    // simulation configuration (F36, F37)
+    in property <bool> sc-visible;
+    in property <string> sc-intro;
+    in property <string> sc-badge;
+    in property <[Nw5Option]> sc-defaults;
+    in-out property <string> sc-scenarios;
+    in-out property <bool> sc-use-seed;
+    in-out property <string> sc-seed;
+    in-out property <bool> sc-bounded;
+    in property <bool> sc-bounded-locked;
+    in-out property <int> sc-orifice;
+    in-out property <string> sc-batches;
+    in-out property <string> sc-oversampling;
+    in-out property <string> sc-draws;
+    in property <string> sc-demand;
+    in property <string> sc-error;
+    in property <bool> sc-can-run;
+    callback sc-apply(bool);
+    callback sc-reset();
+    callback sc-cancel();
+
+    // units (F53)
+    in property <bool> un-visible;
+    in-out property <int> un-choice;
+    in property <int> un-current;
+    callback un-apply();
+    callback un-cancel();
+
+    // execution details (F41)
+    in property <bool> rd-visible;
+    in property <string> rd-title;
+    in property <string> rd-text;
+    callback rd-close();
+}

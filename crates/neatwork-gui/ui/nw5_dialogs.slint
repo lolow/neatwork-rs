@@ -1,0 +1,546 @@
+// Dialogs of the NeatWork 5 workspace, drawn over the main window as the
+// other dialogs.
+import { Button, LineEdit, ComboBox, CheckBox, ScrollView, VerticalBox, HorizontalBox, GroupBox } from "std-widgets.slint";
+import { T } from "state.slint";
+import { Nw5 } from "nw5_state.slint";
+import { Dialog, ButtonRow } from "dialogs.slint";
+
+component ErrorText inherits Text {
+    color: #b91c1c;
+    wrap: word-wrap;
+}
+
+component LabeledEdit inherits HorizontalLayout {
+    in property <string> label;
+    in-out property <string> value;
+    in property <length> label-width: 230px;
+    spacing: 6px;
+    Text {
+        width: root.label-width;
+        text: root.label;
+        vertical-alignment: center;
+    }
+    LineEdit {
+        text <=> root.value;
+    }
+}
+
+// New project (F4).
+export component Nw5NewProjectDialog inherits Dialog {
+    title: T.s("Nw5.New_project");
+    panel-width: 440px;
+    panel-height: 200px;
+    LabeledEdit {
+        label: T.s("Nw5.Project_name");
+        label-width: 120px;
+        value <=> Nw5.np-name;
+    }
+    if Nw5.np-error != "": ErrorText {
+        text: Nw5.np-error;
+    }
+    Rectangle { vertical-stretch: 1; }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.np-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Create_project");
+            primary: true;
+            enabled: Nw5.np-name != "";
+            clicked => { Nw5.np-create(); }
+        }
+    }
+}
+
+// Open project (F5), with Delete (F6).
+export component Nw5OpenProjectDialog inherits Dialog {
+    title: T.s("Nw5.Open_project");
+    panel-width: 560px;
+    panel-height: 460px;
+    Text {
+        text: T.s("Nw5.Open_project_text");
+    }
+    LineEdit {
+        placeholder-text: T.s("Nw5.Search_projects");
+        text <=> Nw5.op-search;
+        edited => { Nw5.op-search-changed(); }
+    }
+    Rectangle {
+        vertical-stretch: 1;
+        background: white;
+        border-width: 1px;
+        border-color: #999;
+        if Nw5.op-empty != "": Text {
+            text: Nw5.op-empty;
+        }
+        ScrollView {
+            VerticalLayout {
+                alignment: start;
+                for p[i] in Nw5.op-items: Rectangle {
+                    height: 44px;
+                    border-width: 1px;
+                    border-color: #e0e0e0;
+                    HorizontalBox {
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            Text {
+                                text: p.name;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: T.s("Nw5.Created") + " " + p.created + (p.open ? "  ·  " + T.s("Nw5.Currently_open") : "");
+                                color: #555;
+                            }
+                        }
+                        Button {
+                            text: T.s("Nw5.Open");
+                            clicked => { Nw5.op-open(i); }
+                        }
+                        Button {
+                            text: T.s("Nw5.Delete");
+                            clicked => { Nw5.op-delete(i); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Close");
+            clicked => { Nw5.op-close(); }
+        }
+    }
+}
+
+// Delete project (F6).
+export component Nw5DeleteProjectDialog inherits Dialog {
+    title: T.s("Nw5.Delete_project_title");
+    panel-width: 520px;
+    panel-height: 330px;
+    Text {
+        text: T.s("Nw5.Delete_project_1") + " “" + Nw5.dp-name + "”.";
+        font-weight: 700;
+        wrap: word-wrap;
+    }
+    Text {
+        text: T.s("Nw5.Delete_project_2") + "\n" + T.s("Nw5.Delete_project_3") + "\n" + T.s("Nw5.Delete_project_4");
+        wrap: word-wrap;
+    }
+    CheckBox {
+        text: T.s("Nw5.Delete_project_check");
+        checked <=> Nw5.dp-checked;
+    }
+    if Nw5.dp-error != "": ErrorText {
+        text: Nw5.dp-error;
+    }
+    Rectangle { vertical-stretch: 1; }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.dp-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Delete_project");
+            primary: true;
+            enabled: Nw5.dp-checked;
+            clicked => { Nw5.dp-confirm(); }
+        }
+    }
+}
+
+// Complementary databases of a .tpo import (F15).
+export component Nw5TpoDialog inherits Dialog {
+    title: T.s("Nw5.Complementary_databases");
+    panel-width: 640px;
+    panel-height: 380px;
+    Text {
+        text: Nw5.tc-file;
+        font-weight: 700;
+    }
+    Text {
+        text: Nw5.tc-analysis;
+        wrap: word-wrap;
+    }
+    GroupBox {
+        title: T.s("Nw5.Diameters_database") + " (" + (Nw5.tc-required ? T.s("Nw5.Required") : T.s("Nw5.Optional")) + ")";
+        HorizontalLayout {
+            spacing: 6px;
+            LineEdit {
+                text <=> Nw5.tc-diameters;
+                placeholder-text: Nw5.tc-required ? T.s("Nw5.Select_diameters_db") : T.s("Nw5.Use_diameters_from_tpo");
+            }
+            Button {
+                text: T.s("Nw5.Browse");
+                clicked => { Nw5.tc-browse-diameters(); }
+            }
+        }
+    }
+    GroupBox {
+        title: T.s("Nw5.Orifices_database") + " (" + T.s("Nw5.Optional") + ")";
+        HorizontalLayout {
+            spacing: 6px;
+            LineEdit {
+                text <=> Nw5.tc-orifices;
+                placeholder-text: T.s("Nw5.No_external_orifices");
+            }
+            Button {
+                text: T.s("Nw5.Browse");
+                clicked => { Nw5.tc-browse-orifices(); }
+            }
+        }
+    }
+    if Nw5.tc-error != "": ErrorText {
+        text: Nw5.tc-error;
+    }
+    Rectangle { vertical-stretch: 1; }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.tc-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Import_tpo");
+            primary: true;
+            enabled: !Nw5.tc-required || Nw5.tc-diameters != "";
+            clicked => { Nw5.tc-import(); }
+        }
+    }
+}
+
+// NW5 design options (neatwork-nw5-design).
+export component Nw5DesignDialog inherits Dialog {
+    title: T.s("Nw5.Design_title");
+    panel-width: 560px;
+    panel-height: 560px;
+    Text {
+        text: Nw5.dd-input;
+        font-weight: 700;
+    }
+    HorizontalLayout {
+        spacing: 6px;
+        Text {
+            width: 230px;
+            text: T.s("Nw5.Risk_measure");
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: [T.s("Nw5.Risk_from_parameters"), "VaR", "CVaR"];
+            current-index <=> Nw5.dd-risk;
+        }
+    }
+    CheckBox {
+        text: T.s("Nw5.Monte_carlo_loads");
+        checked <=> Nw5.dd-monte-carlo;
+    }
+    LabeledEdit {
+        label: T.s("Nw5.Design_seed");
+        value <=> Nw5.dd-seed;
+    }
+    Text {
+        text: T.s("Nw5.Parameter_overrides");
+        font-weight: 700;
+    }
+    ScrollView {
+        vertical-stretch: 1;
+        VerticalLayout {
+            alignment: start;
+            spacing: 4px;
+            for p[i] in Nw5.dd-params: HorizontalLayout {
+                spacing: 6px;
+                Text {
+                    width: 230px;
+                    text: p.key;
+                    vertical-alignment: center;
+                }
+                LineEdit {
+                    text: p.value;
+                    edited(t) => { Nw5.dd-param-edited(i, t); }
+                }
+            }
+        }
+    }
+    if Nw5.dd-error != "": ErrorText {
+        text: Nw5.dd-error;
+    }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.dd-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Run_design");
+            primary: true;
+            clicked => { Nw5.dd-run(); }
+        }
+    }
+}
+
+// Result of a design and the revision save (F9, F10).
+export component Nw5DesignResultDialog inherits Dialog {
+    title: Nw5.dr-title;
+    panel-width: 640px;
+    panel-height: 520px;
+    ScrollView {
+        vertical-stretch: 1;
+        content-height: dr-text.preferred-height + 10px;
+        dr-text := Text {
+            x: 4px;
+            width: parent.width - 16px;
+            text: Nw5.dr-text;
+            wrap: word-wrap;
+        }
+    }
+    if Nw5.dr-ok: GroupBox {
+        title: T.s("Nw5.Save_revision");
+        VerticalLayout {
+            spacing: 4px;
+            Text {
+                text: T.s("Nw5.Original_file") + " " + Nw5.dr-source + " · " + T.s("Nw5.Original_unchanged");
+                wrap: word-wrap;
+            }
+            CheckBox {
+                text: T.s("Nw5.Save_automatically") + " (" + Nw5.dr-auto-name + ")";
+                checked: Nw5.dr-mode == 0;
+                toggled => { Nw5.dr-mode = self.checked ? 0 : 1; }
+            }
+            CheckBox {
+                text: T.s("Nw5.Choose_file_name");
+                checked: Nw5.dr-mode == 1;
+                toggled => { Nw5.dr-mode = self.checked ? 1 : 0; }
+            }
+            if Nw5.dr-mode == 1: LabeledEdit {
+                label: T.s("Nw5.New_file_name");
+                label-width: 130px;
+                value <=> Nw5.dr-custom-name;
+            }
+            if Nw5.dr-mode == 1: Text {
+                text: T.s("Nw5.Extension_hint");
+                color: #555;
+            }
+        }
+    }
+    if Nw5.dr-error != "": ErrorText {
+        text: Nw5.dr-error;
+    }
+    ButtonRow {
+        Button {
+            text: Nw5.dr-ok ? T.s("Nw5.Discard") : T.s("Nw5.Close");
+            clicked => { Nw5.dr-discard(); }
+        }
+        if Nw5.dr-ok: Button {
+            text: T.s("Nw5.Save_new_version");
+            primary: true;
+            clicked => { Nw5.dr-save(); }
+        }
+    }
+}
+
+// Configure simulation (F36, F37).
+export component Nw5SimulationDialog inherits Dialog {
+    title: T.s("Nw5.Configure_simulation");
+    panel-width: 700px;
+    panel-height: 640px;
+    HorizontalLayout {
+        spacing: 8px;
+        Text {
+            text: Nw5.sc-intro;
+            wrap: word-wrap;
+            horizontal-stretch: 1;
+        }
+        Text {
+            text: Nw5.sc-badge;
+            color: #1d6fc4;
+            font-weight: 700;
+        }
+    }
+    ScrollView {
+        vertical-stretch: 1;
+        VerticalLayout {
+            spacing: 6px;
+            alignment: start;
+            GroupBox {
+                title: T.s("Nw5.Defaults_and_sources");
+                VerticalLayout {
+                    spacing: 2px;
+                    for o in Nw5.sc-defaults: HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            width: 230px;
+                            text: o.label;
+                        }
+                        Text {
+                            width: 180px;
+                            text: o.value;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: o.source;
+                            color: o.source == "Modified by user" ? #1d6fc4 : #555;
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: T.s("Nw5.Hydraulic_configuration");
+                VerticalLayout {
+                    spacing: 4px;
+                    CheckBox {
+                        text: T.s("Nw5.Bounded_flow");
+                        enabled: !Nw5.sc-bounded-locked;
+                        checked <=> Nw5.sc-bounded;
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            width: 230px;
+                            text: T.s("Nw5.Orifice_model");
+                            vertical-alignment: center;
+                        }
+                        ComboBox {
+                            model: [T.s("Nw5.Ideal"), T.s("Nw5.Commercial")];
+                            current-index <=> Nw5.sc-orifice;
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: T.s("Nw5.Run_setup");
+                VerticalLayout {
+                    spacing: 4px;
+                    LabeledEdit {
+                        label: T.s("Nw5.Number_of_scenarios");
+                        value <=> Nw5.sc-scenarios;
+                    }
+                    CheckBox {
+                        text: T.s("Nw5.Use_specific_seed");
+                        checked <=> Nw5.sc-use-seed;
+                    }
+                    if Nw5.sc-use-seed: LabeledEdit {
+                        label: T.s("Nw5.Random_seed");
+                        value <=> Nw5.sc-seed;
+                    }
+                    if !Nw5.sc-use-seed: Text {
+                        text: T.s("Nw5.Fresh_seed");
+                        color: #555;
+                    }
+                }
+            }
+            GroupBox {
+                title: T.s("Nw5.Client_demand");
+                Text {
+                    text: Nw5.sc-demand;
+                    wrap: word-wrap;
+                }
+            }
+            GroupBox {
+                title: T.s("Nw5.Advanced_generation");
+                VerticalLayout {
+                    spacing: 4px;
+                    LabeledEdit {
+                        label: T.s("Nw5.Max_batches");
+                        value <=> Nw5.sc-batches;
+                    }
+                    LabeledEdit {
+                        label: T.s("Nw5.Oversampling");
+                        value <=> Nw5.sc-oversampling;
+                    }
+                    LabeledEdit {
+                        label: T.s("Nw5.Max_draws");
+                        value <=> Nw5.sc-draws;
+                    }
+                }
+            }
+        }
+    }
+    if Nw5.sc-error != "": ErrorText {
+        text: Nw5.sc-error;
+    }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Reset_defaults");
+            clicked => { Nw5.sc-reset(); }
+        }
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.sc-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Apply");
+            clicked => { Nw5.sc-apply(false); }
+        }
+        Button {
+            text: T.s("Nw5.Run");
+            primary: true;
+            enabled: Nw5.sc-can-run;
+            clicked => { Nw5.sc-apply(true); }
+        }
+    }
+}
+
+// Unit settings (F53).
+export component Nw5UnitsDialog inherits Dialog {
+    title: T.s("Nw5.Unit_settings");
+    panel-width: 480px;
+    panel-height: 300px;
+    Text {
+        text: Nw5.project-name;
+        font-weight: 700;
+    }
+    Text {
+        text: T.s("Nw5.Units_text");
+        wrap: word-wrap;
+    }
+    for label[k] in ["Meter (m)", "Feet (ft)", "Inches (in)"]: CheckBox {
+        text: label;
+        checked: Nw5.un-choice == k;
+        toggled => { Nw5.un-choice = k; }
+    }
+    Text {
+        text: T.s("Nw5.Units_note");
+        color: #555;
+        wrap: word-wrap;
+    }
+    Rectangle { vertical-stretch: 1; }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Cancel");
+            clicked => { Nw5.un-cancel(); }
+        }
+        Button {
+            text: T.s("Nw5.Apply");
+            primary: true;
+            enabled: Nw5.un-choice != Nw5.un-current;
+            clicked => { Nw5.un-apply(); }
+        }
+    }
+}
+
+// Execution details (F41).
+export component Nw5RunDetailsDialog inherits Dialog {
+    title: Nw5.rd-title;
+    panel-width: 640px;
+    panel-height: 560px;
+    Text {
+        text: T.s("Nw5.Details_text");
+        color: #555;
+    }
+    ScrollView {
+        vertical-stretch: 1;
+        content-height: rd-text.preferred-height + 10px;
+        rd-text := Text {
+            x: 4px;
+            width: parent.width - 16px;
+            text: Nw5.rd-text;
+            font-family: "monospace";
+            wrap: word-wrap;
+        }
+    }
+    ButtonRow {
+        Button {
+            text: T.s("Nw5.Close");
+            clicked => { Nw5.rd-close(); }
+        }
+    }
+}

@@ -44,6 +44,7 @@ impl App {
                     self.set_fd_name(&name);
                 }
             }
+            "close" if self.nw5_cur().is_some() => self.nw5_close_current(),
             "close" => {
                 if let Some(p) = self.cur() {
                     let text =
@@ -111,6 +112,7 @@ impl App {
             "lang-sp" => self.set_language(i18n::SP),
             "sim-new" => self.new_simulation(),
             "sim-delete" => self.delete_simulation(),
+            a if a.starts_with("nw5-") => self.nw5_menu(a),
             _ => {}
         }
     }
@@ -158,6 +160,7 @@ impl App {
             "nstype" => s.set_ns_type(n),
             "nsrun" => self.ns_run(),
             "dbtab" => s.set_db_tab(n),
+            k if k.starts_with("nw5") => self.nw5_step(k, value),
             _ => {}
         }
     }
@@ -224,6 +227,7 @@ impl App {
             Pending::CloseAll => {
                 self.projects.clear();
                 self.current = None;
+                self.nw5_close_all();
                 self.refresh();
             }
             Pending::Exit => {
@@ -236,6 +240,7 @@ impl App {
                 }
                 self.write_as(&name);
             }
+            p @ (Pending::Nw5ArchiveRevision(_) | Pending::Nw5DeleteRun(_)) => self.nw5_answer(p),
             Pending::None => {}
         }
     }
@@ -1409,7 +1414,7 @@ impl App {
         let _ = solve_with_highs;
     }
 
-    fn start_progress(&self, status_key: &str) {
+    pub fn start_progress(&self, status_key: &str) {
         if let Some(ui) = self.ui() {
             let s = ui.global::<AppState>();
             s.set_pg_value(0);
@@ -1491,6 +1496,7 @@ impl App {
                 Ok(content) => self.store_simulation(project, &content),
                 Err(e) => self.message(&self.tr("Gui.Error"), &e, 0, Pending::None),
             },
+            Some(Finished::Nw5Design { tab, result }) => self.nw5_design_finished(tab, result),
             None => {}
         }
     }

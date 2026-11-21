@@ -7,6 +7,9 @@ mod app;
 mod drawing;
 mod files;
 mod i18n;
+mod nw5;
+mod nw5_actions;
+mod nw5_tables;
 mod support;
 mod table;
 
@@ -65,7 +68,7 @@ fn run_steps(steps: Vec<String>, delay: u64) {
     });
 }
 
-fn idx(i: i32) -> usize {
+pub fn idx(i: i32) -> usize {
     usize::try_from(i).unwrap_or(usize::MAX)
 }
 
@@ -92,9 +95,15 @@ fn main() -> Result<(), slint::PlatformError> {
                     ui.global::<AppState>().set_pane_tab(0);
                 }
                 app.refresh();
+            } else if idx(i) - app.projects.len() < app.nw5.tabs.len() {
+                // a NW5 project tab
+                app.nw5.current = Some(idx(i) - app.projects.len());
+                app.current = None;
+                app.refresh();
             }
         });
     });
+    nw5_actions::connect(&ui);
     s.on_text_apply(|t| with_app(|app| app.text_apply(&t)));
     s.on_text_undo(|| with_app(|app| app.refresh_text()));
     s.on_table_edited(|id, r, c, t| with_app(|app| app.table_edited(id, idx(r), idx(c), &t)));

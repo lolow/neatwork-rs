@@ -2910,6 +2910,11 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "neatwork-core",
+ "neatwork-nw5",
+ "neatwork-nw5-design",
+ "neatwork-nw5-io",
+ "neatwork-nw5-project",
+ "neatwork-nw5-sim",
  "rfd",
  "slint",
  "slint-build",

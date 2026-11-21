@@ -4,6 +4,7 @@ import { TabWidget, Button, TextEdit, ComboBox, StandardListView, HorizontalBox,
 import { AppState, T } from "state.slint";
 import { DataTable, TableToolbar } from "table.slint";
 import { TreeView, NetworkView } from "views.slint";
+import { Nw5Workspace } from "nw5.slint";
 
 export component WelcomePane inherits Rectangle {
     background: white;
@@ -186,5 +187,6 @@ export component ProjectPane inherits Rectangle {
             TextPane { }
         }
     }
+    if AppState.current-kind == 2: Nw5Workspace { }
     if AppState.current-kind < 0: WelcomePane { }
 }
